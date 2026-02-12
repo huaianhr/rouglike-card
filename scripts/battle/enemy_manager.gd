@@ -49,9 +49,11 @@ func execute_enemy_push() -> void:
 	
 	print("[EnemyManager] 共有 %d 个敌人单位" % enemies.size())
 	
-	# 创建推进列表（避免在遍历时修改字典）
-	var push_actions: Array = []
+	# 按X坐标从小到大排序（从左到右），让最左边的敌人先移动
+	enemies.sort_custom(func(a, b): return a.grid_position.x < b.grid_position.x)
 	
+	# 直接处理推进，从左到右逐个执行（而不是先收集再执行）
+	# 这样前面的敌人移动后，后面的敌人就能跟上
 	for enemy in enemies:
 		if enemy and is_instance_valid(enemy):
 			var current_pos = enemy.grid_position
@@ -65,52 +67,18 @@ func execute_enemy_push() -> void:
 					# 目标位置有单位
 					if target_unit.faction == GameEnums.Faction.PLAYER:
 						# 是玩家单位，触发腐化
-						push_actions.append({
-							"type": "corrupt",
-							"enemy": enemy,
-							"target": target_unit,
-							"pos": current_pos
-						})
+						print("[EnemyManager] %s 尝试腐化 %s" % [enemy.unit_data.display_name, target_unit.unit_data.display_name])
+						target_unit.apply_corruption(enemy)
+						print("[EnemyManager] %s 腐化计数: %d/%d" % [target_unit.unit_data.display_name, target_unit.corruption_counter, corrupt_threshold])
 					else:
 						# 是敌方单位，不推进
 						print("[EnemyManager] %s 无法推进（前方有友军）" % enemy.unit_data.display_name)
 				else:
 					# 目标位置为空，正常推进
-					push_actions.append({
-						"type": "move",
-						"enemy": enemy,
-						"from": current_pos,
-						"to": target_pos
-					})
+					if board.move_unit(current_pos, target_pos):
+						print("[EnemyManager] %s 推进: %s -> %s" % [enemy.unit_data.display_name, current_pos, target_pos])
 			else:
 				# 到达边界
 				print("[EnemyManager] %s 到达边界" % enemy.unit_data.display_name)
 				# TODO: 触发失败条件检测
-	
-	# 执行所有推进动作
-	for action in push_actions:
-		execute_push_action(action)
 
-# 执行单个推进动作
-func execute_push_action(action: Dictionary) -> void:
-	match action["type"]:
-		"move":
-			# 移动敌人
-			var enemy = action["enemy"]
-			var from_pos = action["from"]
-			var to_pos = action["to"]
-			
-			if board.move_unit(from_pos, to_pos):
-				print("[EnemyManager] %s 推进: %s -> %s" % [enemy.unit_data.display_name, from_pos, to_pos])
-			
-		"corrupt":
-			# 触发腐化
-			var enemy = action["enemy"]
-			var target = action["target"]
-			
-			print("[EnemyManager] %s 尝试腐化 %s" % [enemy.unit_data.display_name, target.unit_data.display_name])
-			
-			# 应用腐化
-			target.apply_corruption(enemy)
-			
-			print("[EnemyManager] %s 腐化计数: %d/%d" % [target.unit_data.display_name, target.corruption_counter, corrupt_threshold])

@@ -118,7 +118,9 @@ func apply_corruption(source: Unit) -> void:
 func corrupt_to_enemy() -> void:
 	# TODO: 根据 degraded_unit_id 转化为低一级敌人
 	# 暂时简单处理：直接转为敌方阵营
+	print("[Unit] %s 被腐化，转为敌方单位" % unit_data.display_name)
 	faction = GameEnums.Faction.ENEMY
+	move_pattern = GameEnums.MovePattern.FORWARD  # 设置为前进模式，让它也能推进
 	corruption_counter = 0
 	EventBus.unit_corrupted.emit(self, "ENEMY")
 	update_visual()
