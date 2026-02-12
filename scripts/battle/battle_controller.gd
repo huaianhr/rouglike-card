@@ -6,6 +6,8 @@ extends Node
 @onready var board: Board = $Board
 @onready var hand_ui: HandUI = $HandUI
 @onready var ap_manager: APManager = $APManager
+@onready var combat_resolver: CombatResolver = $CombatResolver
+@onready var enemy_manager: EnemyManager = $EnemyManager
 @onready var turn_label: Label = $TurnUI/Panel/MarginContainer/TurnLabel
 @onready var end_turn_button: Button = $TurnUI/Panel/MarginContainer/EndTurnButton
 
@@ -19,6 +21,10 @@ func _ready() -> void:
 	
 	# 设置HandUI的Board引用
 	hand_ui.set_board(board)
+	
+	# 设置战斗系统的Board引用
+	combat_resolver.set_board(board)
+	enemy_manager.set_board(board)
 	
 	# 加载测试关卡
 	await get_tree().create_timer(0.1).timeout  # 等待Autoload初始化
@@ -81,11 +87,10 @@ func spawn_enemy_waves(turn_number: int) -> void:
 
 # 结束回合按钮
 func _on_end_turn_pressed() -> void:
-	EventBus.turn_ended.emit()
+	print("[BattleController] 玩家结束回合")
 	end_turn_button.disabled = true
+	EventBus.turn_ended.emit()
 	
-	# TODO: 触发战斗结算和敌人推进
-	# 暂时简单地进入下一回合
-	await get_tree().create_timer(0.5).timeout
+	# 等待战斗流程完成后重新启用按钮
+	await EventBus.turn_started
 	end_turn_button.disabled = false
-	GameManager.on_enemy_turn_ended()

@@ -26,6 +26,7 @@ var units: Dictionary = {}
 
 func _ready() -> void:
 	EventBus.level_started.connect(_on_level_started)
+	EventBus.unit_died.connect(_on_unit_died)
 
 # 初始化棋盘
 func initialize_board(battle_rules: BattleRuleConfig) -> void:
@@ -137,14 +138,15 @@ func remove_unit(pos: Vector2i) -> void:
 func get_all_units() -> Array[Unit]:
 	var result: Array[Unit] = []
 	for unit in units.values():
-		result.append(unit)
+		if unit and is_instance_valid(unit):
+			result.append(unit)
 	return result
 
 # 获取指定阵营的所有单位
 func get_units_by_faction(faction: GameEnums.Faction) -> Array[Unit]:
 	var result: Array[Unit] = []
 	for unit in units.values():
-		if unit.faction == faction:
+		if unit and is_instance_valid(unit) and unit.faction == faction:
 			result.append(unit)
 	return result
 
@@ -171,3 +173,12 @@ func clear_tile_selection() -> void:
 
 func _on_level_started(level_config: Resource) -> void:
 	initialize_board(level_config.battle_rules)
+
+# 单位死亡时从字典中移除
+func _on_unit_died(unit: Node, position: Vector2i) -> void:
+	print("[Board] 单位死亡，从字典移除: %s 位置: %s" % [unit, position])
+	if units.has(position):
+		units.erase(position)
+	# 清除Tile的占用状态
+	if is_valid_position(position):
+		tiles[position.y][position.x].set_unit(null)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_controller.gd" id="1_battle_controller"]
 [ext_resource type="PackedScene" path="res://scenes/battle/board.tscn" id="2_board"]
@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ap_ui.tscn" id="4_ap_ui"]
 [ext_resource type="Script" path="res://scripts/battle/ap_manager.gd" id="5_ap_manager"]
 [ext_resource type="Script" path="res://scripts/ui/message_ui.gd" id="6_message_ui"]
+[ext_resource type="Script" path="res://scripts/battle/combat_resolver.gd" id="7_combat_resolver"]
+[ext_resource type="Script" path="res://scripts/battle/enemy_manager.gd" id="8_enemy_manager"]
 
 [sub_resource type="Theme" id="Theme_1"]
 
@@ -51,6 +53,12 @@ layout_mode = 1
 
 [node name="APManager" type="Node" parent="."]
 script = ExtResource("5_ap_manager")
+
+[node name="CombatResolver" type="Node" parent="."]
+script = ExtResource("7_combat_resolver")
+
+[node name="EnemyManager" type="Node" parent="."]
+script = ExtResource("8_enemy_manager")
 
 [node name="TurnUI" type="Control" parent="."]
 layout_mode = 1

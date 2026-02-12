@@ -33,6 +33,7 @@ signal unit_corrupted(unit: Node, new_faction: String)
 signal combat_started()
 signal combat_resolved()
 signal enemy_wave_spawned(wave_index: int, enemies: Array)
+signal enemy_turn_ended()
 
 # ========== 关卡信号 ==========
 signal level_started(level_config: Resource)
