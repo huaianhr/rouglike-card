@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/unit_data.gd" id="1_unit_data"]
+
+[resource]
+script = ExtResource("1_unit_data")
+id = "enemy_knight"
+display_name = "恶灵骑士"
+faction = 1
+tier = 2
+max_hp = 25
+attack = 10
+attack_pattern = 0
+attack_range = 1
+move_pattern = 1
+degraded_unit_id = ""
+icon_path = ""

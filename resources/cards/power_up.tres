@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=4 format=3 uid="uid://card_power_up"]
+
+[ext_resource type="Script" path="res://scripts/data/card_data.gd" id="1_card_data"]
+[ext_resource type="Script" path="res://scripts/data/effects/buff_stat_effect.gd" id="2_buff_effect"]
+
+[sub_resource type="Resource" id="BuffEffect_1"]
+script = ExtResource("2_buff_effect")
+stat_type = "attack"
+value = 2
+duration = -1
+
+[resource]
+script = ExtResource("1_card_data")
+id = "power_up"
+display_name = "蓄势"
+description = "目标友军+2攻击力（单局）"
+card_type = 2
+cost = 1
+target_rule = 1
+effects = Array[Resource("res://scripts/data/card_effect.gd")]([SubResource("BuffEffect_1")])
+icon_path = ""

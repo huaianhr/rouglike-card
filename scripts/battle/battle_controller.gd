@@ -1,0 +1,91 @@
+# 战场控制器
+class_name BattleController
+extends Node
+
+# 子节点引用
+@onready var board: Board = $Board
+@onready var hand_ui: HandUI = $HandUI
+@onready var ap_manager: APManager = $APManager
+@onready var turn_label: Label = $TurnUI/Panel/MarginContainer/TurnLabel
+@onready var end_turn_button: Button = $TurnUI/Panel/MarginContainer/EndTurnButton
+
+# 当前关卡
+var current_level: LevelConfig
+
+func _ready() -> void:
+	# 连接信号
+	end_turn_button.pressed.connect(_on_end_turn_pressed)
+	EventBus.turn_started.connect(_on_turn_started)
+	
+	# 设置HandUI的Board引用
+	hand_ui.set_board(board)
+	
+	# 加载测试关卡
+	await get_tree().create_timer(0.1).timeout  # 等待Autoload初始化
+	load_test_level()
+
+# 加载测试关卡
+func load_test_level() -> void:
+	var level = ConfigLoader.get_level("level_01")
+	if not level:
+		push_error("无法加载关卡 level_01")
+		return
+	
+	current_level = level
+	GameManager.load_level(level)
+	
+	# 初始化卡组
+	var starter_cards: Array[Resource] = []
+	for card_id in level.starter_deck_ids:
+		var card = ConfigLoader.get_card(card_id)
+		if card:
+			starter_cards.append(card)
+			print("[BattleController] 添加初始卡牌: %s" % card.display_name)
+		else:
+			push_warning("[BattleController] 未找到卡牌: %s" % card_id)
+	
+	print("[BattleController] 初始化卡组，共 %d 张卡" % starter_cards.size())
+	DeckManager.initialize_deck(starter_cards)
+	
+	# 开始第一回合
+	GameManager.start_next_turn()
+
+# 回合开始
+func _on_turn_started(turn_number: int) -> void:
+	turn_label.text = "第 %d 回合" % turn_number
+	
+	# 生成敌人波次
+	spawn_enemy_waves(turn_number)
+
+# 生成敌人波次
+func spawn_enemy_waves(turn_number: int) -> void:
+	if not current_level:
+		return
+	
+	for wave in current_level.enemy_waves:
+		if wave.spawn_turn == turn_number:
+			# 计算生成位置（从右侧开始）
+			var spawn_col = board.cols - 1 - wave.spawn_column_offset
+			var spawn_row = wave.lane
+			
+			# 生成敌人
+			for i in wave.enemy_unit_ids.size():
+				var enemy_id = wave.enemy_unit_ids[i]
+				var enemy_data = ConfigLoader.get_unit(enemy_id)
+				if enemy_data:
+					var spawn_pos = Vector2i(spawn_col - i, spawn_row)  # 横向排列
+					if board.is_valid_position(spawn_pos) and not board.is_occupied(spawn_pos):
+						board.spawn_unit(enemy_data, spawn_pos)
+					else:
+						push_warning("无法在 %s 生成敌人（位置无效或已占用）" % spawn_pos)
+
+# 结束回合按钮
+func _on_end_turn_pressed() -> void:
+	EventBus.turn_ended.emit()
+	end_turn_button.disabled = true
+	
+	# TODO: 触发战斗结算和敌人推进
+	# 暂时简单地进入下一回合
+	await get_tree().create_timer(0.5).timeout
+	end_turn_button.disabled = false
+	GameManager.on_enemy_turn_ended()

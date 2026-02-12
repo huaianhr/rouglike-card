@@ -1,0 +1,23 @@
+# 关卡配置
+class_name LevelConfig
+extends Resource
+
+# 基础信息
+@export var level_id: String = ""
+@export var display_name: String = "未命名关卡"
+@export_multiline var description: String = ""
+
+# 战斗规则（引用）
+@export var battle_rules: BattleRuleConfig
+
+# 敌人波次列表
+@export var enemy_waves: Array[WaveData] = []
+
+# 初始卡组（卡牌ID列表）
+@export var starter_deck_ids: Array[String] = []
+
+# 奖励池
+@export var reward_pool: RewardPoolData
+
+# 胜利条件（暂时简化为清空所有波次）
+@export var total_turns: int = 10  # 总回合数（如果到达此回合且无敌人则胜利）

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BattleRuleConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/battle_rule_config.gd" id="1_battle_rules"]
+
+[resource]
+script = ExtResource("1_battle_rules")
+board_rows = 3
+board_cols = 10
+starting_ap = 5
+ap_per_turn = 3
+max_ap = 10
+starting_hand_size = 5
+max_hand_size = 10
+corrupt_threshold_turns = 3
+player_attacks_first = true
+defeat_column = 0
