@@ -13,4 +13,7 @@ script = ExtResource("1_card_data")
 id = "summon_mage"
 display_name = "召唤法师"
 description = "在目标空格部署一个法师单位（HP：5，ATK：14）"
+card_type = 0
+cost = 1
+is_consumable = true
 effects = Array[ExtResource("1_3kyoa")]([SubResource("SpawnEffect_1")])

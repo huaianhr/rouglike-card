@@ -41,13 +41,13 @@ func set_unit(unit: Node) -> void:
 # 设置可选择状态
 func set_selectable(selectable: bool) -> void:
 	is_selectable = selectable
-	if selectable:
-		print("[Tile] 格子 %s 设为可选择（占用: %s）" % [grid_position, is_occupied])
+	# if selectable:
+	# 	print("[Tile] 格子 %s 设为可选择（占用: %s）" % [grid_position, is_occupied])
 	update_visual()
 	
 	# 验证颜色是否设置成功
-	if is_node_ready() and background:
-		print("[Tile] 格子 %s 颜色已更新为: %s" % [grid_position, background.color])
+	# if is_node_ready() and background:
+	# 	print("[Tile] 格子 %s 颜色已更新为: %s" % [grid_position, background.color])
 
 # 更新视觉
 func update_visual() -> void:
@@ -79,5 +79,5 @@ func _on_mouse_exited() -> void:
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			print("[Tile] 格子 %s 被点击（占用: %s，可选择: %s）" % [grid_position, is_occupied, is_selectable])
+			# print("[Tile] 格子 %s 被点击（占用: %s，可选择: %s）" % [grid_position, is_occupied, is_selectable])
 			EventBus.tile_selected.emit(grid_position)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_controller.gd" id="1_battle_controller"]
 [ext_resource type="PackedScene" path="res://scenes/battle/board.tscn" id="2_board"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scripts/ui/message_ui.gd" id="6_message_ui"]
 [ext_resource type="Script" path="res://scripts/battle/combat_resolver.gd" id="7_combat_resolver"]
 [ext_resource type="Script" path="res://scripts/battle/enemy_manager.gd" id="8_enemy_manager"]
+[ext_resource type="Script" path="res://scripts/battle/victory_checker.gd" id="9_victory_checker"]
+[ext_resource type="PackedScene" path="res://scenes/ui/result_panel.tscn" id="10_result_panel"]
 
 [sub_resource type="Theme" id="Theme_1"]
 
@@ -59,6 +61,9 @@ script = ExtResource("7_combat_resolver")
 
 [node name="EnemyManager" type="Node" parent="."]
 script = ExtResource("8_enemy_manager")
+
+[node name="VictoryChecker" type="Node" parent="."]
+script = ExtResource("9_victory_checker")
 
 [node name="TurnUI" type="Control" parent="."]
 layout_mode = 1
@@ -120,3 +125,6 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="ResultPanel" parent="." instance=ExtResource("10_result_panel")]
+layout_mode = 1

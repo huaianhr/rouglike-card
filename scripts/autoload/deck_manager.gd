@@ -103,18 +103,69 @@ func discard_hand() -> void:
 func _on_turn_started(turn_number: int) -> void:
 	print("[DeckManager] 回合 %d 开始，抽牌堆: %d 张，手牌: %d 张" % [turn_number, draw_pile.size(), hand.size()])
 	
-	if turn_number == 1:
-		# 首回合抽初始手牌
-		var starting_hand_size = GameManager.battle_rules.starting_hand_size if GameManager.battle_rules else 5
-		print("[DeckManager] 首回合抽 %d 张牌" % starting_hand_size)
+	var starting_hand_size = GameManager.battle_rules.starting_hand_size if GameManager.battle_rules else 5
+	
+	if turn_number == 0:
+		# 第0回合（部署回合）：只抽取召唤类卡牌
+		print("[DeckManager] 部署回合抽 %d 张召唤卡" % starting_hand_size)
+		draw_summon_cards_only(starting_hand_size)
+	elif turn_number == 1:
+		# 第1回合：正常抽牌（不弃牌，因为第0回合结束时已弃置）
+		print("[DeckManager] 第1回合抽 %d 张牌" % starting_hand_size)
 		draw_cards(starting_hand_size)
 	else:
-		# 后续回合先弃牌再抽牌
+		# 后续回合：先弃牌再抽牌
 		discard_hand()
-		draw_cards(GameManager.battle_rules.starting_hand_size if GameManager.battle_rules else 5)
+		draw_cards(starting_hand_size)
 
 # 添加卡牌到牌库（奖励获得）
 func add_card_to_library(card: Resource) -> void:
 	library.append(card)
 	EventBus.ui_message.emit("获得新卡牌：%s" % card.display_name, "info")
 	print("[DeckManager] ✅ 卡牌 %s 已添加到永久牌库（当前牌库: %d 张）" % [card.display_name, library.size()])
+
+# 只抽取召唤类卡牌（用于第0回合部署回合）
+func draw_summon_cards_only(count: int) -> void:
+	print("[DeckManager] 🎯 第0回合：只抽取召唤类卡牌（目标: %d 张）" % count)
+	var drawn_count = 0
+	var attempts = 0
+	var max_attempts = draw_pile.size() + discard_pile.size()  # 防止死循环
+	
+	while drawn_count < count and attempts < max_attempts:
+		attempts += 1
+		
+		if hand.size() >= max_hand_size:
+			EventBus.ui_message.emit("手牌已满！", "warning")
+			break
+		
+		# 如果抽牌堆空了，将弃牌堆重新洗入
+		if draw_pile.is_empty():
+			if discard_pile.is_empty():
+				print("[DeckManager] ⚠️ 所有卡牌都已抽完，无法继续")
+				break
+			print("[DeckManager] 🔄 抽牌堆为空，从弃牌堆补充")
+			draw_pile.append_array(discard_pile)
+			discard_pile.clear()
+			shuffle_deck()
+		
+		# 查找第一张召唤类卡牌
+		var found_summon = false
+		for i in range(draw_pile.size()):
+			var card = draw_pile[i]
+			if card.card_type == GameEnums.CardType.UNIT:  # 召唤类
+				# 从抽牌堆中移除并加入手牌
+				draw_pile.remove_at(i)
+				hand.append(card)
+				drawn_count += 1
+				print("[DeckManager] 抽到召唤卡: %s" % card.display_name)
+				EventBus.card_drawn.emit(card)
+				found_summon = true
+				break
+		
+		# 如果整个抽牌堆都没有召唤卡
+		if not found_summon:
+			print("[DeckManager] ⚠️ 抽牌堆中无召唤类卡牌")
+			break
+	
+	print("[DeckManager] 第0回合抽牌完成，抽到 %d 张召唤卡，手牌共 %d 张" % [drawn_count, hand.size()])
+	EventBus.hand_updated.emit(hand)

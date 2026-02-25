@@ -8,6 +8,7 @@ extends Node
 @onready var ap_manager: APManager = $APManager
 @onready var combat_resolver: CombatResolver = $CombatResolver
 @onready var enemy_manager: EnemyManager = $EnemyManager
+@onready var victory_checker: VictoryChecker = $VictoryChecker
 @onready var turn_label: Label = $TurnUI/Panel/MarginContainer/TurnLabel
 @onready var end_turn_button: Button = $TurnUI/Panel/MarginContainer/EndTurnButton
 
@@ -25,6 +26,7 @@ func _ready() -> void:
 	# 设置战斗系统的Board引用
 	combat_resolver.set_board(board)
 	enemy_manager.set_board(board)
+	victory_checker.set_board(board)
 	
 	# 加载测试关卡
 	await get_tree().create_timer(0.1).timeout  # 等待Autoload初始化
@@ -59,12 +61,20 @@ func load_test_level() -> void:
 		print("[BattleController] 后续关卡，保留牌库（%d 张卡），重新准备战斗" % DeckManager.library.size())
 		DeckManager.prepare_battle_deck()
 	
-	# 开始第一回合
-	GameManager.start_next_turn()
+	# 开始第0回合（部署回合）
+	print("[BattleController] 开始第0回合（部署回合）")
+	EventBus.turn_started.emit(0)
 
 # 回合开始
 func _on_turn_started(turn_number: int) -> void:
-	turn_label.text = "第 %d 回合" % turn_number
+	# 第0回合显示"部署回合"
+	if turn_number == 0:
+		turn_label.text = "部署回合"
+	else:
+		turn_label.text = "第 %d 回合" % turn_number
+	
+	# 重新启用结束回合按钮
+	end_turn_button.disabled = false
 	
 	# 生成敌人波次
 	spawn_enemy_waves(turn_number)
@@ -72,6 +82,11 @@ func _on_turn_started(turn_number: int) -> void:
 # 生成敌人波次
 func spawn_enemy_waves(turn_number: int) -> void:
 	if not current_level:
+		return
+	
+	# 第0回合（部署回合）不生成敌人
+	if turn_number == 0:
+		print("[BattleController] 🎯 部署回合，不生成敌人")
 		return
 	
 	for wave in current_level.enemy_waves:
@@ -96,7 +111,3 @@ func _on_end_turn_pressed() -> void:
 	print("[BattleController] 玩家结束回合")
 	end_turn_button.disabled = true
 	EventBus.turn_ended.emit()
-	
-	# 等待战斗流程完成后重新启用按钮
-	await EventBus.turn_started
-	end_turn_button.disabled = false

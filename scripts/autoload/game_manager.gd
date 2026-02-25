@@ -49,11 +49,23 @@ func change_phase(new_phase: CombatPhase) -> void:
 	var phase_name = CombatPhase.keys()[new_phase]
 	EventBus.combat_phase_changed.emit(phase_name)
 
+# 判断是否为部署回合
+func is_deployment_turn() -> bool:
+	return current_turn == 0
+
 # 玩家结束回合
 func end_player_turn() -> void:
 	if current_phase != CombatPhase.PLAYER_TURN:
 		return
 	
+	# 第0回合（部署回合）特殊处理
+	if is_deployment_turn():
+		print("[GameManager] 🎯 部署回合结束，弃置手牌，直接进入第1回合")
+		DeckManager.discard_hand()
+		start_next_turn()
+		return
+	
+	# 正常回合：进入战斗阶段
 	change_phase(CombatPhase.COMBAT)
 	# 战斗结算由 CombatResolver 监听信号后执行
 
@@ -69,8 +81,13 @@ func on_enemy_turn_ended() -> void:
 
 # 检测胜负
 func check_victory_condition() -> void:
-	# TODO: 后续由 VictoryChecker 实现具体逻辑
-	# 暂时简单进入下一回合
+	# 实际检测在 VictoryChecker 中进行
+	# VictoryChecker 会监听 CHECK_VICTORY 阶段并调用 trigger_victory/trigger_defeat/continue_game
+	pass
+
+# 继续游戏（未触发胜负时）
+func continue_game() -> void:
+	print("[GameManager] 继续下一回合")
 	start_next_turn()
 
 # 开始下一回合

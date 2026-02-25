@@ -152,7 +152,7 @@ func get_units_by_faction(faction: GameEnums.Faction) -> Array[Unit]:
 
 # 设置格子可选择状态（用于卡牌目标）
 func set_tiles_selectable(positions: Array[Vector2i]) -> void:
-	print("[Board] 设置可选择格子，数量: %d" % positions.size())
+	# print("[Board] 设置可选择格子，数量: %d" % positions.size())
 	
 	# 先清除所有选择状态
 	for row in tiles:
@@ -162,7 +162,7 @@ func set_tiles_selectable(positions: Array[Vector2i]) -> void:
 	# 设置指定格子为可选择
 	for pos in positions:
 		if is_valid_position(pos):
-			print("[Board] 设置格子 %s 为可选择" % pos)
+			# print("[Board] 设置格子 %s 为可选择" % pos)
 			tiles[pos.y][pos.x].set_selectable(true)
 
 # 清除所有格子选择状态
