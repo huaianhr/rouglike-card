@@ -16,6 +16,7 @@ display_name = "亡灵永存"
 description = "目标友军+5护甲（单局）（当一个单位拥有护甲，面对攻击时优先扣除护甲值）"
 card_type = 2
 cost = 1
+is_consumable = false
 target_rule = 1
 effects = Array[Resource("res://scripts/data/card_effect.gd")]([SubResource("BuffEffect_1")])
 icon_path = ""

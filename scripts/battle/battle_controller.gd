@@ -40,18 +40,24 @@ func load_test_level() -> void:
 	current_level = level
 	GameManager.load_level(level)
 	
-	# 初始化卡组
-	var starter_cards: Array[Resource] = []
-	for card_id in level.starter_deck_ids:
-		var card = ConfigLoader.get_card(card_id)
-		if card:
-			starter_cards.append(card)
-			print("[BattleController] 添加初始卡牌: %s" % card.display_name)
-		else:
-			push_warning("[BattleController] 未找到卡牌: %s" % card_id)
-	
-	print("[BattleController] 初始化卡组，共 %d 张卡" % starter_cards.size())
-	DeckManager.initialize_deck(starter_cards)
+	# 初始化卡组（只在首次战斗时初始化，后续关卡保留牌库）
+	if not DeckManager.is_library_initialized:
+		# 首次战斗：从关卡配置初始化牌库
+		var starter_cards: Array[Resource] = []
+		for card_id in level.starter_deck_ids:
+			var card = ConfigLoader.get_card(card_id)
+			if card:
+				starter_cards.append(card)
+				print("[BattleController] 添加初始卡牌: %s" % card.display_name)
+			else:
+				push_warning("[BattleController] 未找到卡牌: %s" % card_id)
+		
+		print("[BattleController] 首次战斗，初始化卡组，共 %d 张卡" % starter_cards.size())
+		DeckManager.initialize_deck(starter_cards)
+	else:
+		# 后续关卡：保留牌库，重新准备战斗牌组
+		print("[BattleController] 后续关卡，保留牌库（%d 张卡），重新准备战斗" % DeckManager.library.size())
+		DeckManager.prepare_battle_deck()
 	
 	# 开始第一回合
 	GameManager.start_next_turn()

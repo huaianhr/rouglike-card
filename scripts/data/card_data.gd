@@ -13,6 +13,9 @@ extends Resource
 # 费用
 @export var cost: int = 1
 
+# 是否为消耗类卡牌（使用后直接消失，不进入弃牌堆）
+@export var is_consumable: bool = true
+
 # 目标规则
 @export var target_rule: GameEnums.TargetRule = GameEnums.TargetRule.EMPTY_TILE
 

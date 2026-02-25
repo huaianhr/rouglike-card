@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://cpa234weoh17e" path="res://scripts/data/card_effect.gd" id="1_vkdtc"]
 [ext_resource type="Script" uid="uid://cvjpq4vdvecm3" path="res://scripts/data/effects/spawn_unit_effect.gd" id="2_spawn_effect"]
 
-[sub_resource type="Resource" id="SpawnEffect_1"]
+[sub_resource type="Resource" id="Resource_vkdtc"]
 script = ExtResource("2_spawn_effect")
 unit_template_id = "player_knight"
 
@@ -13,4 +13,4 @@ script = ExtResource("1_card_data")
 id = "summon_knight"
 display_name = "召唤骑士"
 description = "在目标空格部署一个骑士单位（HP：16，ATK：8）"
-effects = Array[ExtResource("1_vkdtc")]([SubResource("SpawnEffect_1")])
+effects = Array[ExtResource("1_vkdtc")]([SubResource("Resource_vkdtc")])
