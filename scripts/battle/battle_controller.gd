@@ -34,9 +34,16 @@ func _ready() -> void:
 
 # 加载测试关卡
 func load_test_level() -> void:
-	var level = ConfigLoader.get_level("level_01")
+	# 从GameManager获取当前应该加载的关卡ID
+	var level_id = GameManager.get_current_level_id()
+	if level_id.is_empty():
+		push_error("[BattleController] 无法获取当前关卡ID")
+		return
+	
+	print("[BattleController] 加载关卡: %s" % level_id)
+	var level = ConfigLoader.get_level(level_id)
 	if not level:
-		push_error("无法加载关卡 level_01")
+		push_error("[BattleController] 无法加载关卡: %s" % level_id)
 		return
 	
 	current_level = level

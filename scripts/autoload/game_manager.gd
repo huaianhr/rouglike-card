@@ -27,6 +27,14 @@ var current_turn: int = 0
 # 游戏规则（运行时缓存）
 var battle_rules: Resource  # BattleRuleConfig
 
+# 关卡序列系统
+var level_sequence: Array[String] = [
+	"level_01",
+	"level_02",
+	"level_03"
+]
+var current_level_index: int = 0  # 当前关卡索引
+
 func _ready() -> void:
 	EventBus.turn_ended.connect(_on_turn_ended)
 
@@ -100,12 +108,37 @@ func start_next_turn() -> void:
 func trigger_victory() -> void:
 	current_state = GameState.SETTLEMENT
 	EventBus.victory_achieved.emit()
-	# TODO: 生成奖励
 
 # 触发失败
 func trigger_defeat() -> void:
 	current_state = GameState.GAME_OVER
 	EventBus.defeat_triggered.emit()
+
+# 获取当前关卡ID
+func get_current_level_id() -> String:
+	if current_level_index < 0 or current_level_index >= level_sequence.size():
+		return ""
+	return level_sequence[current_level_index]
+
+# 加载下一关
+func load_next_level() -> void:
+	current_level_index += 1
+	print("[GameManager] 尝试加载下一关，索引: %d" % current_level_index)
+	
+	if current_level_index >= level_sequence.size():
+		# 通关所有关卡
+		print("[GameManager] 🎊 恭喜通关所有关卡！")
+		trigger_final_victory()
+	else:
+		# 重新加载场景，BattleController会自动加载新关卡
+		print("[GameManager] 进入下一关: %s" % get_current_level_id())
+		get_tree().reload_current_scene()
+
+# 触发最终胜利
+func trigger_final_victory() -> void:
+	print("[GameManager] 🏆 游戏通关！")
+	EventBus.ui_message.emit("恭喜通关所有关卡！", "info")
+	# TODO: 显示最终胜利画面
 
 func _on_turn_ended() -> void:
 	end_player_turn()

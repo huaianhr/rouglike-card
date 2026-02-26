@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="LevelConfig" format=3 uid="uid://herdw3ji7kgh"]
+
+[ext_resource type="Resource" path="res://resources/configs/default_rules.tres" id="1_0vkta"]
+[ext_resource type="Script" uid="uid://r6v85b1v02lx" path="res://scripts/data/wave_data.gd" id="2_y8lno"]
+[ext_resource type="Script" uid="uid://bolrvtu62e2sp" path="res://scripts/data/reward_pool_data.gd" id="3_0y8ar"]
+[ext_resource type="Script" uid="uid://b1rdwe6qqi4vc" path="res://scripts/data/level_config.gd" id="4_4jlus"]
+
+[sub_resource type="Resource" id="Wave_1"]
+script = ExtResource("2_y8lno")
+enemy_unit_ids = Array[String](["enemy_servant"])
+
+[sub_resource type="Resource" id="Resource_fpmjh"]
+script = ExtResource("2_y8lno")
+spawn_turn = 2
+lane = 1
+enemy_unit_ids = Array[String](["enemy_servant"])
+metadata/_custom_type_script = "uid://r6v85b1v02lx"
+
+[sub_resource type="Resource" id="Wave_2"]
+script = ExtResource("2_y8lno")
+spawn_turn = 3
+lane = 1
+enemy_unit_ids = Array[String](["enemy_knight"])
+
+[sub_resource type="Resource" id="Wave_3"]
+script = ExtResource("2_y8lno")
+spawn_turn = 4
+enemy_unit_ids = Array[String](["enemy_servant", "enemy_knight"])
+
+[sub_resource type="Resource" id="Wave_4"]
+script = ExtResource("2_y8lno")
+spawn_turn = 4
+lane = 1
+enemy_unit_ids = Array[String](["enemy_servant", "enemy_mage"])
+
+[sub_resource type="Resource" id="RewardPool_1"]
+script = ExtResource("3_0y8ar")
+card_pool = Array[String](["summon_knight:10", "summon_mage:10", "power_up:5", "undead_armor:5"])
+
+[resource]
+script = ExtResource("4_4jlus")
+level_id = "level_03"
+display_name = "第三关：恶灵围城"
+description = "这是最后的防线，绝不能退！"
+battle_rules = ExtResource("1_0vkta")
+enemy_waves = Array[ExtResource("2_y8lno")]([SubResource("Wave_1"), SubResource("Resource_fpmjh"), SubResource("Wave_2"), SubResource("Wave_3"), SubResource("Wave_4")])
+starter_deck_ids = Array[String](["summon_knight", "summon_knight", "summon_mage", "summon_mage", "power_up", "power_up", "power_up", "undead_armor", "undead_armor", "undead_armor"])
+reward_pool = SubResource("RewardPool_1")

@@ -133,11 +133,10 @@ func _on_continue_pressed() -> void:
 	visible = false
 	
 	if GameManager.current_state == GameManager.GameState.SETTLEMENT:
-		# 胜利：进入下一关
+		# 胜利：进入下一关（线性关卡序列）
 		print("[ResultPanel] 进入下一关")
 		EventBus.level_completed.emit(true, rewards)
-		# 暂时重新加载当前关（TODO: 后续实现真正的下一关加载）
-		get_tree().reload_current_scene()
+		GameManager.load_next_level()
 	else:
 		# 失败：重试当前关
 		print("[ResultPanel] 重试当前关卡")
