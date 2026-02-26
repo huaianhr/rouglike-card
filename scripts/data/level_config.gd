@@ -6,15 +6,16 @@ extends Resource
 @export var level_id: String = ""
 @export var display_name: String = "未命名关卡"
 @export_multiline var description: String = ""
+@export var chapter_id: int = 1  # 所属章节
 
 # 战斗规则（引用）
 @export var battle_rules: BattleRuleConfig
 
+# 核心防御塔配置
+@export var tower_config: TowerConfig
+
 # 敌人波次列表
 @export var enemy_waves: Array[WaveData] = []
-
-# 初始卡组（卡牌ID列表）
-@export var starter_deck_ids: Array[String] = []
 
 # 奖励池
 @export var reward_pool: RewardPoolData

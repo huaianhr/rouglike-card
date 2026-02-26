@@ -35,6 +35,9 @@ var level_sequence: Array[String] = [
 ]
 var current_level_index: int = 0  # 当前关卡索引
 
+# 核心防御塔生命值持久化（章节ID -> 当前HP）
+var chapter_tower_hp: Dictionary = {}
+
 func _ready() -> void:
 	EventBus.turn_ended.connect(_on_turn_ended)
 
@@ -139,6 +142,17 @@ func trigger_final_victory() -> void:
 	print("[GameManager] 🏆 游戏通关！")
 	EventBus.ui_message.emit("恭喜通关所有关卡！", "info")
 	# TODO: 显示最终胜利画面
+
+# 保存章节的塔HP
+func save_tower_hp(chapter_id: int, hp: int) -> void:
+	chapter_tower_hp[chapter_id] = hp
+	print("[GameManager] 保存章节 %d 的塔HP: %d" % [chapter_id, hp])
+
+# 获取章节的塔HP（如果首次进入，返回满血）
+func get_tower_hp(chapter_id: int, max_hp: int) -> int:
+	if chapter_tower_hp.has(chapter_id):
+		return chapter_tower_hp[chapter_id]
+	return max_hp  # 首次进入章节，返回满血
 
 func _on_turn_ended() -> void:
 	end_player_turn()

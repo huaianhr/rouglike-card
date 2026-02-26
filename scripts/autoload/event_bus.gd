@@ -41,6 +41,13 @@ signal level_completed(victory: bool, rewards: Array)
 signal victory_achieved()
 signal defeat_triggered()
 
+# ========== 核心防御塔信号 ==========
+signal tower_initialized(tower_config: Resource, current_hp: int)
+signal tower_hp_changed(current_hp: int, max_hp: int)
+signal tower_attacked(target_unit: Node)
+signal tower_took_damage(damage: int, attacker: Node)
+signal tower_destroyed()
+
 # ========== UI信号 ==========
 signal tile_hovered(position: Vector2i)
 signal tile_selected(position: Vector2i)

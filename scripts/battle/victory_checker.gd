@@ -5,6 +5,7 @@ extends Node
 
 # 棋盘引用
 var board: Board
+var tower_manager  # 核心防御塔管理器引用（动态设置）
 
 # 关卡配置
 var level_config: LevelConfig
@@ -12,10 +13,15 @@ var level_config: LevelConfig
 func _ready() -> void:
 	EventBus.level_started.connect(_on_level_started)
 	EventBus.combat_phase_changed.connect(_on_combat_phase_changed)
+	EventBus.tower_destroyed.connect(_on_tower_destroyed)
 
 # 设置棋盘引用
 func set_board(b: Board) -> void:
 	board = b
+
+# 设置塔管理器引用
+func set_tower_manager(tm) -> void:
+	tower_manager = tm
 
 # 关卡开始时初始化
 func _on_level_started(config: Resource) -> void:
@@ -47,11 +53,17 @@ func check_conditions() -> void:
 	# 没有触发胜负，继续下一回合
 	GameManager.continue_game()
 
-# 检查失败条件：任意敌人到达或越过第0列
+# 检查失败条件：任意敌人到达或越过第0列 OR 核心防御塔被摧毁
 func check_defeat() -> bool:
 	if not board:
 		return false
 	
+	# 1. 检查核心防御塔是否被摧毁
+	if tower_manager and tower_manager.current_hp <= 0:
+		print("[VictoryChecker] 失败原因：核心防御塔被摧毁")
+		return true
+	
+	# 2. 检查是否有敌人到达败北列
 	var defeat_column = 0
 	if GameManager.battle_rules:
 		defeat_column = GameManager.battle_rules.defeat_column
@@ -65,6 +77,11 @@ func check_defeat() -> bool:
 				return true
 	
 	return false
+
+# 塔被摧毁事件（立即触发失败）
+func _on_tower_destroyed() -> void:
+	print("[VictoryChecker] 核心防御塔被摧毁，立即触发失败")
+	GameManager.trigger_defeat()
 
 # 检查胜利条件：所有波次已生成 + 场上无敌人
 func check_victory() -> bool:

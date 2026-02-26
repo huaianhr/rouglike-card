@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://r6v85b1v02lx" path="res://scripts/data/wave_data.gd" id="2_y8lno"]
 [ext_resource type="Script" uid="uid://bolrvtu62e2sp" path="res://scripts/data/reward_pool_data.gd" id="3_0y8ar"]
 [ext_resource type="Script" uid="uid://b1rdwe6qqi4vc" path="res://scripts/data/level_config.gd" id="4_4jlus"]
+[ext_resource type="Resource" path="res://resources/towers/default_tower.tres" id="5_tower_config"]
 
 [sub_resource type="Resource" id="Wave_1"]
 script = ExtResource("2_y8lno")
@@ -42,7 +43,8 @@ script = ExtResource("4_4jlus")
 level_id = "level_03"
 display_name = "第三关：恶灵围城"
 description = "这是最后的防线，绝不能退！"
+chapter_id = 1
 battle_rules = ExtResource("1_0vkta")
+tower_config = ExtResource("5_tower_config")
 enemy_waves = Array[ExtResource("2_y8lno")]([SubResource("Wave_1"), SubResource("Resource_fpmjh"), SubResource("Wave_2"), SubResource("Wave_3"), SubResource("Wave_4")])
-starter_deck_ids = Array[String](["summon_knight", "summon_knight", "summon_mage", "summon_mage", "power_up", "power_up", "power_up", "undead_armor", "undead_armor", "undead_armor"])
 reward_pool = SubResource("RewardPool_1")

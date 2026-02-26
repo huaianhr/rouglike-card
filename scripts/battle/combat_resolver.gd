@@ -5,6 +5,7 @@ extends Node
 
 # 棋盘引用
 var board: Board
+var tower_manager  # 核心防御塔管理器引用（动态设置）
 
 func _ready() -> void:
 	EventBus.combat_phase_changed.connect(_on_combat_phase_changed)
@@ -12,6 +13,10 @@ func _ready() -> void:
 # 设置棋盘引用
 func set_board(b: Board) -> void:
 	board = b
+
+# 设置塔管理器引用
+func set_tower_manager(tm) -> void:
+	tower_manager = tm
 
 # 战斗阶段改变时触发
 func _on_combat_phase_changed(phase: String) -> void:
@@ -33,7 +38,17 @@ func execute_combat() -> void:
 	# 等待一小段时间以便看清动画（后期可替换为真实动画）
 	await get_tree().create_timer(0.3).timeout
 	
-	# 2. 敌人单位攻击
+	# 2. 核心防御塔攻击
+	print("[CombatResolver] --- 核心防御塔攻击阶段 ---")
+	if tower_manager:
+		tower_manager.execute_attack(GameManager.current_turn)
+	else:
+		push_warning("[CombatResolver] TowerManager引用未设置")
+	
+	# 等待一小段时间
+	await get_tree().create_timer(0.3).timeout
+	
+	# 3. 敌人单位攻击
 	print("[CombatResolver] --- 敌人单位攻击阶段 ---")
 	execute_faction_attacks(GameEnums.Faction.ENEMY)
 	
@@ -48,13 +63,32 @@ func execute_combat() -> void:
 
 # 执行指定阵营的所有单位攻击
 func execute_faction_attacks(faction: GameEnums.Faction) -> void:
-	var units = board.get_units_by_faction(faction)
-	
-	print("[CombatResolver] %s 阵营共有 %d 个单位" % ["玩家" if faction == GameEnums.Faction.PLAYER else "敌人", units.size()])
-	
-	for unit in units:
-		if unit and is_instance_valid(unit):
-			execute_unit_attack(unit)
+	# 如果是敌人阵营，检查每行是否有玩家单位，决定攻击目标
+	if faction == GameEnums.Faction.ENEMY and tower_manager:
+		for lane in range(3):
+			var player_units_in_lane = board.get_units_in_lane(lane, GameEnums.Faction.PLAYER)
+			var enemy_units_in_lane = board.get_units_in_lane(lane, GameEnums.Faction.ENEMY)
+			
+			if player_units_in_lane.is_empty() and not enemy_units_in_lane.is_empty():
+				# 该行无玩家单位，所有敌人攻击塔
+				print("[CombatResolver] 第 %d 行无玩家单位，%d 个敌人攻击核心防御塔" % [lane, enemy_units_in_lane.size()])
+				for enemy in enemy_units_in_lane:
+					if enemy and is_instance_valid(enemy):
+						var damage = enemy.attack
+						print("[CombatResolver] %s 攻击核心防御塔，造成 %d 点伤害" % [enemy.unit_data.display_name, damage])
+						tower_manager.take_damage(damage, enemy)
+			else:
+				# 该行有玩家单位，敌人正常攻击玩家单位
+				for enemy in enemy_units_in_lane:
+					if enemy and is_instance_valid(enemy):
+						execute_unit_attack(enemy)
+	else:
+		# 玩家阵营正常攻击
+		var units = board.get_units_by_faction(faction)
+		print("[CombatResolver] %s 阵营共有 %d 个单位" % ["玩家" if faction == GameEnums.Faction.PLAYER else "敌人", units.size()])
+		for unit in units:
+			if unit and is_instance_valid(unit):
+				execute_unit_attack(unit)
 
 # 执行单个单位的攻击
 func execute_unit_attack(unit: Unit) -> void:

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="GameConfig" format=3 uid="uid://dq4j5k8mam0np"]
+
+[ext_resource type="Script" path="res://scripts/data/game_config.gd" id="1_game_config"]
+
+[resource]
+script = ExtResource("1_game_config")
+initial_deck_ids = Array[String](["summon_knight", "summon_knight", "summon_mage", "summon_mage", "power_up", "power_up", "power_up", "undead_armor", "undead_armor", "undead_armor"])

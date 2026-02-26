@@ -182,3 +182,13 @@ func _on_unit_died(unit: Node, position: Vector2i) -> void:
 	# 清除Tile的占用状态
 	if is_valid_position(position):
 		tiles[position.y][position.x].set_unit(null)
+
+# 获取指定行和阵营的所有单位
+func get_units_in_lane(lane: int, faction: GameEnums.Faction) -> Array[Node]:
+	var result: Array[Node] = []
+	for pos in units:
+		var unit = units[pos]
+		if unit and is_instance_valid(unit):
+			if pos.y == lane and unit.faction == faction:
+				result.append(unit)
+	return result

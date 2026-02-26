@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://bx5y607a8cacd"]
+
+[ext_resource type="Script" path="res://scripts/ui/tower_ui.gd" id="1_tower_ui"]
+
+[node name="TowerUI" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 250.0
+offset_bottom = 150.0
+script = ExtResource("1_tower_ui")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="TowerNameLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "核心防御塔"
+horizontal_alignment = 1
+
+[node name="HPLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "生命: 80 / 80"
+
+[node name="HPBar" type="ProgressBar" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+value = 80.0
+
+[node name="AttackLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "攻击力: 100"
+
+[node name="CooldownLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "冷却：5 回合"

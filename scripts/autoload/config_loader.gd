@@ -3,12 +3,14 @@
 extends Node
 
 # 配置缓存
+var game_config: Resource  # GameConfig
 var battle_rules: Resource  # BattleRuleConfig
 var levels: Dictionary = {}  # level_id -> LevelConfig
 var cards: Dictionary = {}  # card_id -> CardData
 var units: Dictionary = {}  # unit_id -> UnitData
 
 # 配置文件路径
+const GAME_CONFIG_PATH = "res://resources/configs/game_config.tres"
 const RULES_PATH = "res://resources/configs/default_rules.tres"
 const LEVELS_DIR = "res://resources/configs/levels/"
 const CARDS_DIR = "res://resources/cards/"
@@ -19,10 +21,19 @@ func _ready() -> void:
 
 # 加载所有配置
 func load_all_configs() -> void:
+	load_game_config()
 	load_battle_rules()
 	load_cards()
 	load_units()
 	load_levels()
+
+# 加载游戏全局配置
+func load_game_config() -> void:
+	if ResourceLoader.exists(GAME_CONFIG_PATH):
+		game_config = load(GAME_CONFIG_PATH)
+		print("[ConfigLoader] 已加载游戏全局配置")
+	else:
+		push_error("[ConfigLoader] 未找到游戏全局配置: %s" % GAME_CONFIG_PATH)
 
 # 加载战斗规则
 func load_battle_rules() -> void:
@@ -106,3 +117,10 @@ func get_level(level_id: String) -> Resource:
 		return levels[level_id]
 	push_warning("[ConfigLoader] 未找到关卡: %s" % level_id)
 	return null
+
+# 获取初始卡组配置
+func get_initial_deck_ids() -> Array[String]:
+	if game_config and "initial_deck_ids" in game_config:
+		return game_config.initial_deck_ids
+	push_error("[ConfigLoader] 无法获取初始卡组配置")
+	return []
