@@ -17,23 +17,22 @@ func _ready() -> void:
 
 # 初始化AP
 func initialize(battle_rules: BattleRuleConfig) -> void:
-	current_ap = battle_rules.starting_ap
-	max_ap = battle_rules.max_ap
+	# 每回合固定AP，无上限（设置为999表示无限制）
 	ap_per_turn = battle_rules.ap_per_turn
+	max_ap = 999  # 无上限
+	current_ap = 0  # 初始为0，等待第0回合开始时设置
 	EventBus.ap_changed.emit(current_ap, max_ap)
 
-# 回合开始时恢复AP
+# 回合开始时重置AP
 func _on_turn_started(turn_number: int) -> void:
-	if turn_number == 1:
-		# 第一回合已经在initialize中设置了
-		return
-	else:
-		# 后续回合恢复AP
-		restore_ap(ap_per_turn)
+	# 每回合直接设置为固定AP，不累加
+	current_ap = ap_per_turn
+	print("[APManager] 回合 %d 开始，AP重置为 %d" % [turn_number, current_ap])
+	EventBus.ap_changed.emit(current_ap, max_ap)
 
-# 恢复AP
+# 恢复AP（保留接口，但改为直接设置）
 func restore_ap(amount: int) -> void:
-	current_ap = min(current_ap + amount, max_ap)
+	current_ap = amount
 	EventBus.ap_changed.emit(current_ap, max_ap)
 
 # 消耗AP
