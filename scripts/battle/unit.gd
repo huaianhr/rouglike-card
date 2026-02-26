@@ -124,3 +124,54 @@ func corrupt_to_enemy() -> void:
 	corruption_counter = 0
 	EventBus.unit_corrupted.emit(self, "ENEMY")
 	update_visual()
+
+# 播放受击特效（超级增强版：巨大闪烁+剧烈抖动+缩放）
+func play_hit_effect() -> void:
+	print("========================================")
+	print("[Unit] 🎬🎬🎬 %s 开始播放受击特效！！！" % unit_data.display_name)
+	print("========================================")
+	
+	# 保存原始位置和缩放
+	var original_position = position
+	var original_scale = scale
+	
+	# 创建Tween动画
+	var tween = create_tween()
+	tween.set_parallel(true)
+	
+	# 1. 极其强烈的颜色闪烁（3次，纯红色）
+	tween.tween_property(self, "modulate", Color(3.0, 0.0, 0.0), 0.12)  # 第1次变红（极红）
+	tween.tween_property(self, "modulate", Color(1.0, 1.0, 1.0), 0.12).set_delay(0.12)  # 恢复
+	tween.tween_property(self, "modulate", Color(3.0, 0.0, 0.0), 0.12).set_delay(0.24)  # 第2次变红
+	tween.tween_property(self, "modulate", Color(1.0, 1.0, 1.0), 0.12).set_delay(0.36)  # 恢复
+	tween.tween_property(self, "modulate", Color(3.0, 0.0, 0.0), 0.12).set_delay(0.48)  # 第3次变红
+	tween.tween_property(self, "modulate", Color(1.0, 1.0, 1.0), 0.15).set_delay(0.6)  # 最终恢复
+	
+	# 2. 巨大缩放效果：瞬间放大1.5倍 -> 弹性恢复
+	tween.tween_property(self, "scale", original_scale * 1.5, 0.15)  # 快速放大
+	tween.tween_property(self, "scale", original_scale, 0.4).set_delay(0.15).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)  # 弹性恢复
+	
+	# 3. 剧烈抖动效果：大幅度左右抖动（8次）
+	var shake_amplitude = 15.0  # 抖动幅度
+	tween.tween_property(self, "position", original_position + Vector2(shake_amplitude, 0), 0.04)
+	tween.tween_property(self, "position", original_position + Vector2(-shake_amplitude, 0), 0.04).set_delay(0.04)
+	tween.tween_property(self, "position", original_position + Vector2(shake_amplitude, 0), 0.04).set_delay(0.08)
+	tween.tween_property(self, "position", original_position + Vector2(-shake_amplitude, 0), 0.04).set_delay(0.12)
+	tween.tween_property(self, "position", original_position + Vector2(shake_amplitude * 0.7, 0), 0.04).set_delay(0.16)
+	tween.tween_property(self, "position", original_position + Vector2(-shake_amplitude * 0.7, 0), 0.04).set_delay(0.2)
+	tween.tween_property(self, "position", original_position + Vector2(shake_amplitude * 0.4, 0), 0.04).set_delay(0.24)
+	tween.tween_property(self, "position", original_position, 0.1).set_delay(0.28)
+	
+	# 4. 添加旋转效果（新增）
+	tween.tween_property(self, "rotation", deg_to_rad(10), 0.1)
+	tween.tween_property(self, "rotation", deg_to_rad(-10), 0.1).set_delay(0.1)
+	tween.tween_property(self, "rotation", deg_to_rad(5), 0.1).set_delay(0.2)
+	tween.tween_property(self, "rotation", deg_to_rad(0), 0.15).set_delay(0.3)
+	
+	# 5. 添加完成回调，确保恢复到原始状态
+	tween.finished.connect(func():
+		modulate = Color(1.0, 1.0, 1.0)
+		scale = original_scale
+		position = original_position
+		rotation = 0
+	)

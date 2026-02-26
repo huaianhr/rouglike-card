@@ -35,33 +35,46 @@ func _on_combat_phase_changed(phase: String) -> void:
 
 # 检查胜负条件
 func check_conditions() -> void:
+	print("==========================================")
 	print("[VictoryChecker] ========== 检查胜负条件 ==========")
+	print("[VictoryChecker] 当前回合: %d" % GameManager.current_turn)
+	print("[VictoryChecker] 当前阶段: %s" % GameManager.CombatPhase.keys()[GameManager.current_phase])
+	print("==========================================")
 	
 	# 先检查失败
 	if check_defeat():
-		print("[VictoryChecker] ❌ 检测到失败条件！")
+		print("[VictoryChecker] ❌❌❌ 检测到失败条件！触发失败！")
 		GameManager.trigger_defeat()
 		return
 	
 	# 再检查胜利
 	if check_victory():
-		print("[VictoryChecker] ✅ 检测到胜利条件！")
+		print("[VictoryChecker] ✅✅✅ 检测到胜利条件！触发胜利！")
 		GameManager.trigger_victory()
 		return
 	
-	print("[VictoryChecker] 继续战斗")
+	print("[VictoryChecker] ✅ 未触发胜负，继续战斗")
 	# 没有触发胜负，继续下一回合
 	GameManager.continue_game()
 
 # 检查失败条件：任意敌人到达或越过第0列 OR 核心防御塔被摧毁
 func check_defeat() -> bool:
 	if not board:
+		print("[VictoryChecker] ⚠️ Board引用为空")
 		return false
 	
+	print("[VictoryChecker] ========== 开始检查失败条件 ==========")
+	
 	# 1. 检查核心防御塔是否被摧毁
-	if tower_manager and tower_manager.current_hp <= 0:
-		print("[VictoryChecker] 失败原因：核心防御塔被摧毁")
-		return true
+	if tower_manager:
+		print("[VictoryChecker] 检查塔状态 - 当前HP: %d, 最大HP: %d" % [tower_manager.current_hp, tower_manager.config.max_hp])
+		if tower_manager.current_hp <= 0:
+			print("[VictoryChecker] ❌❌❌ 失败原因：核心防御塔被摧毁！")
+			return true
+		else:
+			print("[VictoryChecker] ✅ 塔状态正常")
+	else:
+		print("[VictoryChecker] ⚠️ TowerManager引用为空")
 	
 	# 2. 检查是否有敌人到达败北列
 	var defeat_column = 0
@@ -69,13 +82,16 @@ func check_defeat() -> bool:
 		defeat_column = GameManager.battle_rules.defeat_column
 	
 	var enemies = board.get_units_by_faction(GameEnums.Faction.ENEMY)
+	print("[VictoryChecker] 当前场上敌人数量: %d" % enemies.size())
 	
 	for enemy in enemies:
 		if enemy and is_instance_valid(enemy):
+			print("[VictoryChecker] 检查敌人: %s 位置: %s (X=%d, 败北列=%d)" % [enemy.unit_data.display_name, enemy.grid_position, enemy.grid_position.x, defeat_column])
 			if enemy.grid_position.x <= defeat_column:
-				print("[VictoryChecker] 失败原因：%s 到达第 %d 列（位置: %s）" % [enemy.unit_data.display_name, enemy.grid_position.x, enemy.grid_position])
+				print("[VictoryChecker] ❌❌❌ 失败原因：%s 到达第 %d 列（位置: %s）" % [enemy.unit_data.display_name, enemy.grid_position.x, enemy.grid_position])
 				return true
 	
+	print("[VictoryChecker] ✅ 未检测到失败条件")
 	return false
 
 # 塔被摧毁事件（立即触发失败）

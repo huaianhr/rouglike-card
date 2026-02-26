@@ -38,17 +38,7 @@ func execute_combat() -> void:
 	# 等待一小段时间以便看清动画（后期可替换为真实动画）
 	await get_tree().create_timer(0.3).timeout
 	
-	# 2. 核心防御塔攻击
-	print("[CombatResolver] --- 核心防御塔攻击阶段 ---")
-	if tower_manager:
-		tower_manager.execute_attack(GameManager.current_turn)
-	else:
-		push_warning("[CombatResolver] TowerManager引用未设置")
-	
-	# 等待一小段时间
-	await get_tree().create_timer(0.3).timeout
-	
-	# 3. 敌人单位攻击
+	# 2. 敌人单位攻击（塔攻击改为手动，在玩家回合触发）
 	print("[CombatResolver] --- 敌人单位攻击阶段 ---")
 	execute_faction_attacks(GameEnums.Faction.ENEMY)
 	
@@ -65,20 +55,24 @@ func execute_combat() -> void:
 func execute_faction_attacks(faction: GameEnums.Faction) -> void:
 	# 如果是敌人阵营，检查每行是否有玩家单位，决定攻击目标
 	if faction == GameEnums.Faction.ENEMY and tower_manager:
+		print("[CombatResolver] 🔍 开始检查敌人攻击目标（逐行检查）")
 		for lane in range(3):
 			var player_units_in_lane = board.get_units_in_lane(lane, GameEnums.Faction.PLAYER)
 			var enemy_units_in_lane = board.get_units_in_lane(lane, GameEnums.Faction.ENEMY)
 			
+			print("[CombatResolver] 第 %d 行: 玩家单位数=%d, 敌人单位数=%d" % [lane, player_units_in_lane.size(), enemy_units_in_lane.size()])
+			
 			if player_units_in_lane.is_empty() and not enemy_units_in_lane.is_empty():
 				# 该行无玩家单位，所有敌人攻击塔
-				print("[CombatResolver] 第 %d 行无玩家单位，%d 个敌人攻击核心防御塔" % [lane, enemy_units_in_lane.size()])
+				print("[CombatResolver] ⚠️ 第 %d 行无玩家单位，%d 个敌人攻击核心防御塔" % [lane, enemy_units_in_lane.size()])
 				for enemy in enemy_units_in_lane:
 					if enemy and is_instance_valid(enemy):
 						var damage = enemy.attack
-						print("[CombatResolver] %s 攻击核心防御塔，造成 %d 点伤害" % [enemy.unit_data.display_name, damage])
+						print("[CombatResolver] 💥 %s 攻击核心防御塔，造成 %d 点伤害" % [enemy.unit_data.display_name, damage])
 						tower_manager.take_damage(damage, enemy)
 			else:
 				# 该行有玩家单位，敌人正常攻击玩家单位
+				print("[CombatResolver] ✅ 第 %d 行有玩家单位，敌人正常攻击玩家单位" % lane)
 				for enemy in enemy_units_in_lane:
 					if enemy and is_instance_valid(enemy):
 						execute_unit_attack(enemy)

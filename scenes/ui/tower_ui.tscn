@@ -52,3 +52,8 @@ text = "攻击力: 100"
 [node name="CooldownLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "冷却：5 回合"
+
+[node name="AttackButton" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "发动攻击"
+disabled = true

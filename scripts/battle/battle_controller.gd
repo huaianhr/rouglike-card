@@ -78,6 +78,7 @@ func load_test_level() -> void:
 	# 设置TowerUI引用
 	if tower_ui:
 		tower_ui.set_tower_manager(tower_manager)
+		tower_ui.set_board(board)
 	
 	# 初始化卡组（只在首次战斗时初始化，后续关卡保留牌库）
 	if not DeckManager.is_library_initialized:

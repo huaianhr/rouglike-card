@@ -56,8 +56,10 @@ func load_level(level_config: Resource) -> void:
 
 # 切换战斗阶段
 func change_phase(new_phase: CombatPhase) -> void:
+	var old_phase_name = CombatPhase.keys()[current_phase]
 	current_phase = new_phase
 	var phase_name = CombatPhase.keys()[new_phase]
+	print("[GameManager] 🔄 阶段切换: %s → %s" % [old_phase_name, phase_name])
 	EventBus.combat_phase_changed.emit(phase_name)
 
 # 判断是否为部署回合
@@ -151,7 +153,10 @@ func save_tower_hp(chapter_id: int, hp: int) -> void:
 # 获取章节的塔HP（如果首次进入，返回满血）
 func get_tower_hp(chapter_id: int, max_hp: int) -> int:
 	if chapter_tower_hp.has(chapter_id):
-		return chapter_tower_hp[chapter_id]
+		var saved_hp = chapter_tower_hp[chapter_id]
+		print("[GameManager] 读取章节 %d 的塔HP: %d" % [chapter_id, saved_hp])
+		return saved_hp
+	print("[GameManager] 章节 %d 首次进入，塔HP使用满血: %d" % [chapter_id, max_hp])
 	return max_hp  # 首次进入章节，返回满血
 
 func _on_turn_ended() -> void:
