@@ -22,6 +22,10 @@ GameManager="*res://scripts/autoload/game_manager.gd"
 DeckManager="*res://scripts/autoload/deck_manager.gd"
 ConfigLoader="*res://scripts/autoload/config_loader.gd"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/config_manager/plugin.cfg")
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
