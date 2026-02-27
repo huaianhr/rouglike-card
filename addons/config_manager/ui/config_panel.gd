@@ -23,6 +23,11 @@ var tower_table: Tree
 var selected_tower_data: Dictionary = {}
 var level_table: Tree
 var selected_level_data: Dictionary = {}
+var wave_table: Tree
+var selected_wave_data: Dictionary = {}
+var current_level_for_waves: Dictionary = {}
+var wave_detail_panel: VBoxContainer
+var enemy_checkboxes: Array = []  # 存储敌人CheckBox
 
 func _ready():
 	print("[配置管理器] _ready() 开始")
@@ -44,6 +49,7 @@ func _ready():
 	create_unit_tab()
 	create_tower_tab()
 	create_level_tab()
+	create_wave_tab()
 	create_global_tab()
 	
 	# 加载数据
@@ -55,6 +61,7 @@ func create_card_tab():
 	print("[配置管理器] 创建卡牌页签")
 	
 	var card_tab = VBoxContainer.new()
+	card_tab.name = "CardTab"
 	
 	# 工具栏
 	var toolbar = HBoxContainer.new()
@@ -93,6 +100,7 @@ func create_unit_tab():
 	print("[配置管理器] 创建单位页签")
 	
 	var unit_tab = VBoxContainer.new()
+	unit_tab.name = "UnitTab"
 	
 	# 工具栏
 	var toolbar = HBoxContainer.new()
@@ -131,6 +139,7 @@ func create_tower_tab():
 	print("[配置管理器] 创建防御塔页签")
 	
 	var tower_tab = VBoxContainer.new()
+	tower_tab.name = "TowerTab"
 	
 	# 工具栏
 	var toolbar = HBoxContainer.new()
@@ -168,6 +177,7 @@ func create_level_tab():
 	print("[配置管理器] 创建关卡页签")
 	
 	var level_tab = VBoxContainer.new()
+	level_tab.name = "LevelTab"
 	
 	# 工具栏
 	var toolbar = HBoxContainer.new()
@@ -200,10 +210,143 @@ func create_level_tab():
 	tab_container.add_child(level_tab)
 	tab_container.set_tab_title(3, "关卡配置")
 
+func create_wave_tab():
+	print("[配置管理器] 创建波次配置页签")
+	
+	var wave_tab = VBoxContainer.new()
+	wave_tab.name = "WaveTab"
+	
+	# 顶部工具栏
+	var top_bar = HBoxContainer.new()
+	top_bar.name = "TopBar"
+	
+	var level_label = Label.new()
+	level_label.text = "选择关卡:"
+	top_bar.add_child(level_label)
+	
+	var level_option = OptionButton.new()
+	level_option.name = "LevelOption"
+	level_option.custom_minimum_size = Vector2(300, 0)
+	level_option.item_selected.connect(_on_wave_level_changed)
+	top_bar.add_child(level_option)
+	
+	var refresh_btn = Button.new()
+	refresh_btn.text = "刷新"
+	refresh_btn.pressed.connect(_on_refresh_waves)
+	top_bar.add_child(refresh_btn)
+	
+	var save_btn = Button.new()
+	save_btn.text = "保存波次"
+	save_btn.pressed.connect(_on_save_waves)
+	top_bar.add_child(save_btn)
+	
+	wave_tab.add_child(top_bar)
+	
+	# 波次列表标题栏
+	var list_bar = HBoxContainer.new()
+	var list_title = Label.new()
+	list_title.text = "波次列表"
+	list_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_bar.add_child(list_title)
+	
+	var add_wave_btn = Button.new()
+	add_wave_btn.text = "+ 新增"
+	add_wave_btn.pressed.connect(_on_add_wave)
+	list_bar.add_child(add_wave_btn)
+	
+	var del_wave_btn = Button.new()
+	del_wave_btn.text = "- 删除"
+	del_wave_btn.pressed.connect(_on_delete_wave)
+	list_bar.add_child(del_wave_btn)
+	
+	wave_tab.add_child(list_bar)
+	
+	# 波次表格
+	wave_table = Tree.new()
+	wave_table.columns = 5
+	wave_table.set_column_title(0, "回合")
+	wave_table.set_column_title(1, "行")
+	wave_table.set_column_title(2, "敌人数量")
+	wave_table.set_column_title(3, "敌人列表")
+	wave_table.set_column_title(4, "列偏移")
+	wave_table.column_titles_visible = true
+	wave_table.hide_root = true
+	wave_table.custom_minimum_size = Vector2(0, 250)
+	wave_table.item_selected.connect(_on_wave_selected)
+	wave_tab.add_child(wave_table)
+	
+	# 分隔线
+	var separator = HSeparator.new()
+	wave_tab.add_child(separator)
+	
+	# 详情编辑区
+	var detail_title = Label.new()
+	detail_title.text = "选中波次详情编辑："
+	detail_title.add_theme_font_size_override("font_size", 14)
+	wave_tab.add_child(detail_title)
+	
+	wave_detail_panel = VBoxContainer.new()
+	wave_detail_panel.name = "WaveDetailPanel"
+	
+	# 回合和行号
+	var basic_row = HBoxContainer.new()
+	basic_row.name = "BasicRow"
+	
+	var turn_label = Label.new()
+	turn_label.text = "生成回合:"
+	turn_label.custom_minimum_size = Vector2(80, 0)
+	basic_row.add_child(turn_label)
+	
+	var turn_spin = SpinBox.new()
+	turn_spin.name = "TurnSpin"
+	turn_spin.min_value = 1
+	turn_spin.max_value = 99
+	turn_spin.value_changed.connect(_on_wave_turn_changed)
+	basic_row.add_child(turn_spin)
+	
+	var lane_label = Label.new()
+	lane_label.text = "生成行号:"
+	lane_label.custom_minimum_size = Vector2(80, 0)
+	basic_row.add_child(lane_label)
+	
+	var lane_option = OptionButton.new()
+	lane_option.name = "LaneOption"
+	lane_option.add_item("0", 0)
+	lane_option.add_item("1", 1)
+	lane_option.add_item("2", 2)
+	lane_option.item_selected.connect(_on_wave_lane_changed)
+	basic_row.add_child(lane_option)
+	
+	wave_detail_panel.add_child(basic_row)
+	
+	# 敌人单位列表标题
+	var enemy_title = Label.new()
+	enemy_title.text = "敌人单位列表 (勾选要生成的敌人):"
+	enemy_title.add_theme_font_size_override("font_size", 12)
+	wave_detail_panel.add_child(enemy_title)
+	
+	# 敌人列表容器（动态创建CheckBox）
+	var enemy_container = VBoxContainer.new()
+	enemy_container.name = "EnemyContainer"
+	wave_detail_panel.add_child(enemy_container)
+	
+	# 提示
+	var hint = Label.new()
+	hint.text = "提示: 列偏移自动计算，第1个敌人=0(最右列)，第2个=1，第3个=2..."
+	hint.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	hint.add_theme_font_size_override("font_size", 11)
+	wave_detail_panel.add_child(hint)
+	
+	wave_tab.add_child(wave_detail_panel)
+	
+	tab_container.add_child(wave_tab)
+	tab_container.set_tab_title(4, "关卡波次配置")
+
 func create_global_tab():
 	print("[配置管理器] 创建全局配置页签")
 	
 	var global_tab = VBoxContainer.new()
+	global_tab.name = "GlobalTab"
 	
 	# 标题
 	var title = Label.new()
@@ -231,15 +374,17 @@ func create_global_tab():
 	global_tab.add_child(save_btn)
 	
 	tab_container.add_child(global_tab)
-	tab_container.set_tab_title(4, "全局配置")
+	tab_container.set_tab_title(5, "初始卡牌配置")
 
 func load_all_configs():
 	print("[配置管理器] 加载配置")
-	load_cards()
+	# 先加载单位，再加载卡牌（因为卡牌需要引用单位）
 	load_units()
+	load_cards()
 	load_towers()
 	load_levels()
 	load_global_config()
+	populate_wave_level_options()
 	update_status("已加载 %d 张卡牌, %d 个单位, %d 个防御塔, %d 个关卡" % [all_cards.size(), all_units.size(), all_towers.size(), all_levels.size()])
 
 func load_cards():
@@ -497,7 +642,7 @@ func refresh_global_config():
 	if game_config_data.is_empty():
 		return
 	
-	var text_edit = tab_container.get_node_or_null("GlobalConfig/InitialDeckEdit")
+	var text_edit = tab_container.get_node_or_null("GlobalTab/InitialDeckEdit")
 	if text_edit:
 		var deck_text = "\n".join(game_config_data.initial_deck_ids)
 		text_edit.text = deck_text
@@ -688,7 +833,7 @@ func _on_save_global_config():
 	if game_config_data.is_empty():
 		return
 	
-	var text_edit = tab_container.get_node_or_null("GlobalConfig/InitialDeckEdit")
+	var text_edit = tab_container.get_node_or_null("GlobalTab/InitialDeckEdit")
 	if not text_edit:
 		return
 	
@@ -789,6 +934,232 @@ func _on_save_pressed():
 
 func _on_refresh_pressed():
 	load_all_configs()
+
+func populate_wave_level_options():
+	var wave_tab = tab_container.get_node_or_null("WaveTab")
+	if not wave_tab:
+		return
+	
+	var level_option = wave_tab.get_node_or_null("TopBar/LevelOption")
+	if not level_option:
+		return
+	
+	level_option.clear()
+	for i in range(all_levels.size()):
+		var level = all_levels[i]
+		level_option.add_item(level.level_id + " - " + level.display_name, i)
+	
+	# 默认选择第一个关卡
+	if all_levels.size() > 0:
+		level_option.selected = 0
+		load_waves_for_level(0)
+
+func load_waves_for_level(level_index: int):
+	if level_index < 0 or level_index >= all_levels.size():
+		return
+	
+	current_level_for_waves = all_levels[level_index]
+	
+	# 加载波次数据
+	var level_res = current_level_for_waves.resource
+	if not level_res or not level_res.enemy_waves:
+		current_level_for_waves["waves"] = []
+	else:
+		var waves = []
+		for wave_res in level_res.enemy_waves:
+			waves.append({
+				"spawn_turn": wave_res.spawn_turn,
+				"lane": wave_res.lane,
+				"enemy_unit_ids": wave_res.enemy_unit_ids.duplicate()
+			})
+		current_level_for_waves["waves"] = waves
+	
+	refresh_wave_table()
+	create_enemy_checkboxes()
+	update_status("已加载关卡：%s，共%d个波次" % [current_level_for_waves.level_id, current_level_for_waves.waves.size()])
+
+func refresh_wave_table():
+	wave_table.clear()
+	var root = wave_table.create_item()
+	
+	if not current_level_for_waves.has("waves"):
+		return
+	
+	for wave in current_level_for_waves.waves:
+		var item = wave_table.create_item(root)
+		item.set_text(0, str(wave.spawn_turn))
+		item.set_text(1, str(wave.lane))
+		item.set_text(2, str(wave.enemy_unit_ids.size()))
+		
+		# 显示敌人名称
+		var enemy_names = []
+		for enemy_id in wave.enemy_unit_ids:
+			var enemy_name = get_unit_name_by_id(enemy_id)
+			enemy_names.append(enemy_name if enemy_name != "" else enemy_id)
+		item.set_text(3, ",".join(enemy_names))
+		
+		# 显示列偏移（自动生成）
+		var offsets = []
+		for i in range(wave.enemy_unit_ids.size()):
+			offsets.append(str(i))
+		item.set_text(4, ",".join(offsets))
+		
+		item.set_metadata(0, wave)
+
+func get_unit_name_by_id(unit_id: String) -> String:
+	for unit in all_units:
+		if unit.id == unit_id:
+			return unit.display_name
+	return ""
+
+func create_enemy_checkboxes():
+	# 清空现有CheckBox
+	var enemy_container = wave_detail_panel.get_node_or_null("EnemyContainer")
+	if not enemy_container:
+		return
+	
+	for child in enemy_container.get_children():
+		child.queue_free()
+	
+	enemy_checkboxes.clear()
+	
+	# 创建敌人CheckBox（仅ENEMY阵营）
+	for unit in all_units:
+		if unit.faction == 1:  # 1 = ENEMY
+			var checkbox = CheckBox.new()
+			checkbox.text = unit.display_name + " (" + unit.id + ")"
+			checkbox.toggled.connect(_on_enemy_checkbox_toggled.bind(unit.id))
+			enemy_container.add_child(checkbox)
+			enemy_checkboxes.append({
+				"checkbox": checkbox,
+				"unit_id": unit.id
+			})
+
+func refresh_wave_detail():
+	if selected_wave_data.is_empty():
+		return
+	
+	var turn_spin = wave_detail_panel.get_node_or_null("BasicRow/TurnSpin")
+	var lane_option = wave_detail_panel.get_node_or_null("BasicRow/LaneOption")
+	
+	if turn_spin:
+		turn_spin.value = selected_wave_data.spawn_turn
+	if lane_option:
+		lane_option.selected = selected_wave_data.lane
+	
+	# 更新CheckBox状态
+	for cb_data in enemy_checkboxes:
+		var is_selected = cb_data.unit_id in selected_wave_data.enemy_unit_ids
+		cb_data.checkbox.button_pressed = is_selected
+
+func _on_wave_level_changed(index: int):
+	load_waves_for_level(index)
+
+func _on_wave_selected():
+	var sel = wave_table.get_selected()
+	if sel:
+		selected_wave_data = sel.get_metadata(0)
+		refresh_wave_detail()
+
+func _on_wave_turn_changed(value: float):
+	if not selected_wave_data.is_empty():
+		selected_wave_data.spawn_turn = int(value)
+		refresh_wave_table()
+		update_status("已修改回合: " + str(value))
+
+func _on_wave_lane_changed(index: int):
+	if not selected_wave_data.is_empty():
+		selected_wave_data.lane = index
+		refresh_wave_table()
+		update_status("已修改行号: " + str(index))
+
+func _on_enemy_checkbox_toggled(checked: bool, unit_id: String):
+	if selected_wave_data.is_empty():
+		return
+	
+	if checked:
+		if not unit_id in selected_wave_data.enemy_unit_ids:
+			selected_wave_data.enemy_unit_ids.append(unit_id)
+	else:
+		selected_wave_data.enemy_unit_ids.erase(unit_id)
+	
+	refresh_wave_table()
+	update_status("已修改敌人列表")
+
+func _on_add_wave():
+	if current_level_for_waves.is_empty():
+		update_status("请先选择关卡")
+		return
+	
+	var new_wave = {
+		"spawn_turn": 1,
+		"lane": 0,
+		"enemy_unit_ids": []
+	}
+	current_level_for_waves.waves.append(new_wave)
+	refresh_wave_table()
+	update_status("已添加新波次")
+
+func _on_delete_wave():
+	if selected_wave_data.is_empty():
+		update_status("请先选择要删除的波次")
+		return
+	
+	current_level_for_waves.waves.erase(selected_wave_data)
+	selected_wave_data = {}
+	refresh_wave_table()
+	update_status("已删除波次")
+
+func _on_save_waves():
+	if current_level_for_waves.is_empty():
+		update_status("请先选择关卡")
+		return
+	
+	var level_res: LevelConfig
+	if current_level_for_waves.resource:
+		level_res = current_level_for_waves.resource
+	else:
+		update_status("错误：无法获取关卡资源")
+		return
+	
+	# 全量刷新波次
+	level_res.enemy_waves.clear()
+	
+	var wave_script = load("res://scripts/data/wave_data.gd")
+	if not wave_script:
+		update_status("错误：无法加载WaveData脚本")
+		return
+	
+	for wave_config in current_level_for_waves.waves:
+		var wave = wave_script.new()
+		wave.spawn_turn = wave_config.spawn_turn
+		wave.lane = wave_config.lane
+		wave.enemy_unit_ids = wave_config.enemy_unit_ids.duplicate()
+		wave.spawn_column_offset = 0  # 默认值，实际由敌人数量自动计算
+		level_res.enemy_waves.append(wave)
+	
+	# 保存关卡
+	if ResourceSaver.save(level_res, current_level_for_waves.path) == OK:
+		update_status("已保存关卡波次配置：%s，共%d个波次" % [current_level_for_waves.level_id, current_level_for_waves.waves.size()])
+		load_waves_for_level(get_current_wave_level_index())
+	else:
+		update_status("保存失败！")
+
+func _on_refresh_waves():
+	var index = get_current_wave_level_index()
+	load_levels()
+	populate_wave_level_options()
+	if index >= 0 and index < all_levels.size():
+		var level_option = tab_container.get_node_or_null("WaveTab/TopBar/LevelOption")
+		if level_option:
+			level_option.selected = index
+		load_waves_for_level(index)
+
+func get_current_wave_level_index() -> int:
+	var level_option = tab_container.get_node_or_null("WaveTab/TopBar/LevelOption")
+	if level_option:
+		return level_option.selected
+	return 0
 
 func update_status(msg: String):
 	status_label.text = msg
