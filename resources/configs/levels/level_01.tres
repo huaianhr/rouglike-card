@@ -9,24 +9,28 @@
 [sub_resource type="Resource" id="Resource_2ry8w"]
 script = ExtResource("3_wave_data")
 enemy_unit_ids = Array[String](["enemy_servant"])
+enemy_offsets = Array[int]([1])
 
 [sub_resource type="Resource" id="Resource_pt2wu"]
 script = ExtResource("3_wave_data")
 spawn_turn = 2
 lane = 1
 enemy_unit_ids = Array[String](["enemy_servant"])
+enemy_offsets = Array[int]([0])
 
 [sub_resource type="Resource" id="Resource_sfw1q"]
 script = ExtResource("3_wave_data")
 spawn_turn = 3
 lane = 1
 enemy_unit_ids = Array[String](["enemy_knight"])
+enemy_offsets = Array[int]([0])
 
 [sub_resource type="Resource" id="Resource_ifjtj"]
 script = ExtResource("3_wave_data")
 spawn_turn = 4
 lane = 2
 enemy_unit_ids = Array[String](["enemy_servant", "enemy_knight"])
+enemy_offsets = Array[int]([0, 1])
 
 [sub_resource type="Resource" id="RewardPool_1"]
 script = ExtResource("4_reward_pool")

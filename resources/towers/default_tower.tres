@@ -5,3 +5,4 @@
 [resource]
 script = ExtResource("1_tower_config")
 tower_id = "default_tower"
+max_hp = 100

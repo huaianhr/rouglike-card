@@ -27,7 +27,7 @@ var wave_table: Tree
 var selected_wave_data: Dictionary = {}
 var current_level_for_waves: Dictionary = {}
 var wave_detail_panel: VBoxContainer
-var enemy_checkboxes: Array = []  # 存储敌人CheckBox
+var enemy_instances_ui: Dictionary = {}  # 存储每个敌人类型的UI容器 {unit_id: VBoxContainer}
 
 func _ready():
 	print("[配置管理器] _ready() 开始")
@@ -990,15 +990,31 @@ func load_waves_for_level(level_index: int):
 	else:
 		var waves = []
 		for wave_res in level_res.enemy_waves:
+			# 复制敌人ID数组
+			var unit_ids: Array = []
+			for id in wave_res.enemy_unit_ids:
+				unit_ids.append(id)
+			
+			# 复制偏移数组（如果存在）
+			var offsets: Array = []
+			if wave_res.enemy_offsets and wave_res.enemy_offsets.size() > 0:
+				for offset in wave_res.enemy_offsets:
+					offsets.append(offset)
+			else:
+				# 兼容旧版配置：自动生成偏移
+				for i in unit_ids.size():
+					offsets.append(wave_res.spawn_column_offset + i)
+			
 			waves.append({
 				"spawn_turn": wave_res.spawn_turn,
 				"lane": wave_res.lane,
-				"enemy_unit_ids": wave_res.enemy_unit_ids.duplicate()
+				"enemy_unit_ids": unit_ids,
+				"enemy_offsets": offsets
 			})
 		current_level_for_waves["waves"] = waves
 	
 	refresh_wave_table()
-	create_enemy_checkboxes()
+	create_enemy_instances_ui()
 	update_status("已加载关卡：%s，共%d个波次" % [current_level_for_waves.level_id, current_level_for_waves.waves.size()])
 
 func refresh_wave_table():
@@ -1014,18 +1030,32 @@ func refresh_wave_table():
 		item.set_text(1, str(wave.lane))
 		item.set_text(2, str(wave.enemy_unit_ids.size()))
 		
-		# 显示敌人名称
-		var enemy_names = []
-		for enemy_id in wave.enemy_unit_ids:
-			var enemy_name = get_unit_name_by_id(enemy_id)
-			enemy_names.append(enemy_name if enemy_name != "" else enemy_id)
-		item.set_text(3, ",".join(enemy_names))
+		# 显示敌人名称和偏移
+		var enemy_display = []
 		
-		# 显示列偏移（自动生成）
+		# 确保 enemy_offsets 存在
+		if not wave.has("enemy_offsets"):
+			wave.enemy_offsets = []
+		
+		for i in wave.enemy_unit_ids.size():
+			var enemy_id = wave.enemy_unit_ids[i]
+			var enemy_name = get_unit_name_by_id(enemy_id)
+			var display_name = enemy_name if enemy_name != "" else enemy_id
+			
+			# 获取偏移（如果没有则显示?）
+			var offset_str = "?"
+			if i < wave.enemy_offsets.size():
+				offset_str = str(wave.enemy_offsets[i])
+			
+			enemy_display.append(display_name + "@" + offset_str)
+		
+		item.set_text(3, ", ".join(enemy_display))
+		
+		# 列偏移列现在显示详细偏移数组
 		var offsets = []
-		for i in range(wave.enemy_unit_ids.size()):
-			offsets.append(str(i))
-		item.set_text(4, ",".join(offsets))
+		for i in wave.enemy_offsets.size():
+			offsets.append(str(wave.enemy_offsets[i]))
+		item.set_text(4, "[" + ",".join(offsets) + "]")
 		
 		item.set_metadata(0, wave)
 
@@ -1035,8 +1065,8 @@ func get_unit_name_by_id(unit_id: String) -> String:
 			return unit.display_name
 	return ""
 
-func create_enemy_checkboxes():
-	# 清空现有CheckBox
+func create_enemy_instances_ui():
+	# 清空现有UI
 	var enemy_container = wave_detail_panel.get_node_or_null("EnemyContainer")
 	if not enemy_container:
 		return
@@ -1044,19 +1074,49 @@ func create_enemy_checkboxes():
 	for child in enemy_container.get_children():
 		child.queue_free()
 	
-	enemy_checkboxes.clear()
+	enemy_instances_ui.clear()
 	
-	# 创建敌人CheckBox（仅ENEMY阵营）
+	# 为每个敌人类型创建可折叠的实例编辑器（仅ENEMY阵营）
 	for unit in all_units:
 		if unit.faction == 1:  # 1 = ENEMY
-			var checkbox = CheckBox.new()
-			checkbox.text = unit.display_name + " (" + unit.id + ")"
-			checkbox.toggled.connect(_on_enemy_checkbox_toggled.bind(unit.id))
-			enemy_container.add_child(checkbox)
-			enemy_checkboxes.append({
-				"checkbox": checkbox,
-				"unit_id": unit.id
-			})
+			var unit_section = VBoxContainer.new()
+			unit_section.name = unit.id + "_Section"
+			
+			# 标题行：敌人名称 + 添加按钮 + 折叠按钮
+			var header = HBoxContainer.new()
+			header.name = "Header"
+			
+			var name_label = Label.new()
+			name_label.text = unit.display_name + " (" + unit.id + ")"
+			name_label.custom_minimum_size = Vector2(200, 0)
+			header.add_child(name_label)
+			
+			var count_label = Label.new()
+			count_label.name = "CountLabel"
+			count_label.text = "(共0个)"
+			header.add_child(count_label)
+			
+			var add_btn = Button.new()
+			add_btn.text = "+ 添加实例"
+			add_btn.pressed.connect(_on_add_enemy_instance.bind(unit.id))
+			header.add_child(add_btn)
+			
+			var toggle_btn = Button.new()
+			toggle_btn.name = "ToggleBtn"
+			toggle_btn.text = "▼"
+			toggle_btn.custom_minimum_size = Vector2(30, 0)
+			toggle_btn.pressed.connect(_on_toggle_enemy_section.bind(unit.id))
+			header.add_child(toggle_btn)
+			
+			unit_section.add_child(header)
+			
+			# 实例列表容器（可折叠）
+			var instances_container = VBoxContainer.new()
+			instances_container.name = "InstancesContainer"
+			unit_section.add_child(instances_container)
+			
+			enemy_container.add_child(unit_section)
+			enemy_instances_ui[unit.id] = unit_section
 
 func refresh_wave_detail():
 	if selected_wave_data.is_empty():
@@ -1070,10 +1130,50 @@ func refresh_wave_detail():
 	if lane_option:
 		lane_option.selected = selected_wave_data.lane
 	
-	# 更新CheckBox状态
-	for cb_data in enemy_checkboxes:
-		var is_selected = cb_data.unit_id in selected_wave_data.enemy_unit_ids
-		cb_data.checkbox.button_pressed = is_selected
+	# 清空所有实例UI
+	for unit_id in enemy_instances_ui:
+		var section = enemy_instances_ui[unit_id]
+		var instances_container = section.get_node_or_null("InstancesContainer")
+		if instances_container:
+			for child in instances_container.get_children():
+				child.queue_free()
+	
+	# 确保 enemy_offsets 存在且长度匹配
+	if not selected_wave_data.has("enemy_offsets"):
+		selected_wave_data.enemy_offsets = []
+	
+	# 如果offsets数组长度不够，填充默认值
+	while selected_wave_data.enemy_offsets.size() < selected_wave_data.enemy_unit_ids.size():
+		selected_wave_data.enemy_offsets.append(0)
+	
+	# 按类型统计敌人
+	var enemy_counts: Dictionary = {}
+	for unit_id in selected_wave_data.enemy_unit_ids:
+		enemy_counts[unit_id] = enemy_counts.get(unit_id, 0) + 1
+	
+	print("[配置管理器] 波次敌人统计: ", enemy_counts)
+	
+	# 填充实例UI
+	for i in selected_wave_data.enemy_unit_ids.size():
+		var unit_id = selected_wave_data.enemy_unit_ids[i]
+		var offset = selected_wave_data.enemy_offsets[i]
+		
+		if enemy_instances_ui.has(unit_id):
+			var section = enemy_instances_ui[unit_id]
+			var instances_container = section.get_node_or_null("InstancesContainer")
+			if instances_container:
+				_add_instance_row(instances_container, i, unit_id, offset)
+	
+	# 更新数量标签
+	for unit_id in enemy_instances_ui:
+		var section = enemy_instances_ui[unit_id]
+		var count_label = section.get_node_or_null("Header/CountLabel")
+		if count_label:
+			var count = enemy_counts.get(unit_id, 0)
+			count_label.text = "(共%d个)" % count
+			print("[配置管理器] 更新计数标签: ", unit_id, " = ", count)
+		else:
+			push_warning("[配置管理器] 找不到CountLabel: " + unit_id)
 
 func _on_wave_level_changed(index: int):
 	load_waves_for_level(index)
@@ -1087,27 +1187,93 @@ func _on_wave_selected():
 func _on_wave_turn_changed(value: float):
 	if not selected_wave_data.is_empty():
 		selected_wave_data.spawn_turn = int(value)
-		refresh_wave_table()
+		call_deferred("refresh_wave_table")
 		update_status("已修改回合: " + str(value))
 
 func _on_wave_lane_changed(index: int):
 	if not selected_wave_data.is_empty():
 		selected_wave_data.lane = index
-		refresh_wave_table()
+		call_deferred("refresh_wave_table")
 		update_status("已修改行号: " + str(index))
 
-func _on_enemy_checkbox_toggled(checked: bool, unit_id: String):
+# 添加一行实例UI
+func _add_instance_row(container: VBoxContainer, index: int, unit_id: String, offset: int):
+	var row = HBoxContainer.new()
+	row.name = "Instance_" + str(index)
+	
+	var instance_label = Label.new()
+	instance_label.text = "  实例 " + str(container.get_child_count() + 1) + ":"
+	instance_label.custom_minimum_size = Vector2(100, 0)
+	row.add_child(instance_label)
+	
+	var offset_label = Label.new()
+	offset_label.text = "列偏移:"
+	row.add_child(offset_label)
+	
+	var offset_spin = SpinBox.new()
+	offset_spin.min_value = 0
+	offset_spin.max_value = 20
+	offset_spin.value = offset
+	offset_spin.custom_minimum_size = Vector2(80, 0)
+	offset_spin.value_changed.connect(_on_instance_offset_changed.bind(index))
+	row.add_child(offset_spin)
+	
+	var delete_btn = Button.new()
+	delete_btn.text = "删除"
+	delete_btn.pressed.connect(_on_delete_enemy_instance.bind(index))
+	row.add_child(delete_btn)
+	
+	container.add_child(row)
+
+# 添加敌人实例
+func _on_add_enemy_instance(unit_id: String):
 	if selected_wave_data.is_empty():
 		return
 	
-	if checked:
-		if not unit_id in selected_wave_data.enemy_unit_ids:
-			selected_wave_data.enemy_unit_ids.append(unit_id)
-	else:
-		selected_wave_data.enemy_unit_ids.erase(unit_id)
+	selected_wave_data.enemy_unit_ids.append(unit_id)
+	selected_wave_data.enemy_offsets.append(0)  # 默认偏移0
 	
-	refresh_wave_table()
-	update_status("已修改敌人列表")
+	call_deferred("refresh_wave_detail")
+	call_deferred("refresh_wave_table")
+	update_status("已添加敌人实例: " + unit_id)
+
+# 删除敌人实例
+func _on_delete_enemy_instance(index: int):
+	if selected_wave_data.is_empty():
+		return
+	
+	if index < selected_wave_data.enemy_unit_ids.size():
+		selected_wave_data.enemy_unit_ids.remove_at(index)
+	if index < selected_wave_data.enemy_offsets.size():
+		selected_wave_data.enemy_offsets.remove_at(index)
+	
+	call_deferred("refresh_wave_detail")
+	call_deferred("refresh_wave_table")
+	update_status("已删除敌人实例")
+
+# 修改实例偏移
+func _on_instance_offset_changed(value: float, index: int):
+	if selected_wave_data.is_empty():
+		return
+	
+	if index < selected_wave_data.enemy_offsets.size():
+		selected_wave_data.enemy_offsets[index] = int(value)
+		print("[配置管理器] 修改偏移: index=%d, value=%d, 完整offsets=%s" % [index, int(value), selected_wave_data.enemy_offsets])
+		call_deferred("refresh_wave_table")
+		update_status("已修改列偏移: " + str(value))
+
+# 折叠/展开敌人类型
+func _on_toggle_enemy_section(unit_id: String):
+	if not enemy_instances_ui.has(unit_id):
+		return
+	
+	var section = enemy_instances_ui[unit_id]
+	var instances_container = section.get_node_or_null("InstancesContainer")
+	var toggle_btn = section.get_node_or_null("Header/ToggleBtn")
+	
+	if instances_container and toggle_btn:
+		instances_container.visible = not instances_container.visible
+		toggle_btn.text = "▼" if instances_container.visible else "▶"
 
 func _on_add_wave():
 	if current_level_for_waves.is_empty():
@@ -1117,7 +1283,8 @@ func _on_add_wave():
 	var new_wave = {
 		"spawn_turn": 1,
 		"lane": 0,
-		"enemy_unit_ids": []
+		"enemy_unit_ids": [],
+		"enemy_offsets": []
 	}
 	current_level_for_waves.waves.append(new_wave)
 	refresh_wave_table()
@@ -1161,9 +1328,26 @@ func save_waves_internal() -> bool:
 		var wave = wave_script.new()
 		wave.spawn_turn = wave_config.spawn_turn
 		wave.lane = wave_config.lane
-		wave.enemy_unit_ids = wave_config.enemy_unit_ids.duplicate()
-		wave.spawn_column_offset = 0  # 默认值，实际由敌人数量自动计算
+		
+		# 显式转换为Array[String]类型
+		var enemy_ids: Array[String] = []
+		for enemy_id in wave_config.enemy_unit_ids:
+			enemy_ids.append(enemy_id)
+		wave.enemy_unit_ids = enemy_ids
+		
+		# 显式转换enemy_offsets为Array[int]类型
+		var offsets: Array[int] = []
+		if wave_config.has("enemy_offsets"):
+			for offset in wave_config.enemy_offsets:
+				offsets.append(int(offset))
+		wave.enemy_offsets = offsets
+		
+		wave.spawn_column_offset = 0  # 保留用于兼容性
 		level_res.enemy_waves.append(wave)
+		
+		print("[配置管理器] 保存波次: turn=%d, lane=%d, enemies=%s, offsets=%s" % [
+			wave.spawn_turn, wave.lane, enemy_ids, offsets
+		])
 	
 	# 保存关卡
 	if ResourceSaver.save(level_res, current_level_for_waves.path) == OK:

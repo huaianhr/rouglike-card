@@ -130,16 +130,24 @@ func spawn_enemy_waves(turn_number: int) -> void:
 	
 	for wave in current_level.enemy_waves:
 		if wave.spawn_turn == turn_number:
-			# 计算生成位置（从右侧开始）
-			var spawn_col = board.cols - 1 - wave.spawn_column_offset
 			var spawn_row = wave.lane
 			
-			# 生成敌人
+			# 生成敌人（使用独立列偏移）
 			for i in wave.enemy_unit_ids.size():
 				var enemy_id = wave.enemy_unit_ids[i]
 				var enemy_data = ConfigLoader.get_unit(enemy_id)
 				if enemy_data:
-					var spawn_pos = Vector2i(spawn_col - i, spawn_row)  # 横向排列
+					# 使用独立偏移，兼容旧版配置
+					var offset = 0
+					if i < wave.enemy_offsets.size():
+						offset = wave.enemy_offsets[i]
+					else:
+						# 旧版兼容：使用全局偏移+索引
+						offset = wave.spawn_column_offset + i
+					
+					var spawn_col = board.cols - 1 - offset
+					var spawn_pos = Vector2i(spawn_col, spawn_row)
+					
 					if board.is_valid_position(spawn_pos) and not board.is_occupied(spawn_pos):
 						board.spawn_unit(enemy_data, spawn_pos)
 					else:

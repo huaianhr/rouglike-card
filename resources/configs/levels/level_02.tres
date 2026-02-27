@@ -4,40 +4,43 @@
 [ext_resource type="Script" uid="uid://r6v85b1v02lx" path="res://scripts/data/wave_data.gd" id="2_3ojb3"]
 [ext_resource type="Script" uid="uid://bolrvtu62e2sp" path="res://scripts/data/reward_pool_data.gd" id="3_6te3r"]
 [ext_resource type="Script" uid="uid://b1rdwe6qqi4vc" path="res://scripts/data/level_config.gd" id="4_s37aj"]
-[ext_resource type="Resource" path="res://resources/towers/default_tower.tres" id="5_tower_config"]
+[ext_resource type="Resource" uid="uid://cy8ya00a1b2cd" path="res://resources/towers/default_tower.tres" id="5_tower_config"]
 
-[sub_resource type="Resource" id="Wave_1"]
+[sub_resource type="Resource" id="Resource_3ojb3"]
 script = ExtResource("2_3ojb3")
 enemy_unit_ids = Array[String](["enemy_servant"])
 
-[sub_resource type="Resource" id="Resource_fpmjh"]
+[sub_resource type="Resource" id="Resource_6te3r"]
 script = ExtResource("2_3ojb3")
 lane = 1
 enemy_unit_ids = Array[String](["enemy_servant"])
-metadata/_custom_type_script = "uid://r6v85b1v02lx"
 
-[sub_resource type="Resource" id="Wave_2"]
+[sub_resource type="Resource" id="Resource_s37aj"]
 script = ExtResource("2_3ojb3")
 lane = 2
 enemy_unit_ids = Array[String](["enemy_knight"])
 
-[sub_resource type="Resource" id="Wave_3"]
+[sub_resource type="Resource" id="Resource_yfvx8"]
 script = ExtResource("2_3ojb3")
 spawn_turn = 2
 enemy_unit_ids = Array[String](["enemy_servant", "enemy_knight", "enemy_knight"])
 
-[sub_resource type="Resource" id="Wave_4"]
+[sub_resource type="Resource" id="Resource_gafq6"]
 script = ExtResource("2_3ojb3")
 spawn_turn = 2
 lane = 1
 enemy_unit_ids = Array[String](["enemy_servant", "enemy_mage"])
 
-[sub_resource type="Resource" id="Resource_wjf10"]
+[sub_resource type="Resource" id="Resource_7yhoi"]
 script = ExtResource("2_3ojb3")
 spawn_turn = 3
 lane = 2
 enemy_unit_ids = Array[String](["enemy_knight", "enemy_knight", "enemy_knight", "enemy_mage"])
-metadata/_custom_type_script = "uid://r6v85b1v02lx"
+
+[sub_resource type="Resource" id="Resource_cmw17"]
+script = ExtResource("2_3ojb3")
+spawn_turn = 3
+enemy_unit_ids = Array[String](["enemy_knight", "enemy_mage", "enemy_servant"])
 
 [sub_resource type="Resource" id="RewardPool_1"]
 script = ExtResource("3_6te3r")
@@ -48,8 +51,7 @@ script = ExtResource("4_s37aj")
 level_id = "level_02"
 display_name = "第二关：恶灵反扑"
 description = "恶灵的攻势更加猛烈，坚守阵地！"
-chapter_id = 1
 battle_rules = ExtResource("1_wjf10")
 tower_config = ExtResource("5_tower_config")
-enemy_waves = Array[ExtResource("2_3ojb3")]([SubResource("Wave_1"), SubResource("Resource_fpmjh"), SubResource("Wave_2"), SubResource("Wave_3"), SubResource("Wave_4"), SubResource("Resource_wjf10")])
+enemy_waves = Array[ExtResource("2_3ojb3")]([SubResource("Resource_3ojb3"), SubResource("Resource_6te3r"), SubResource("Resource_s37aj"), SubResource("Resource_yfvx8"), SubResource("Resource_gafq6"), SubResource("Resource_7yhoi"), SubResource("Resource_cmw17")])
 reward_pool = SubResource("RewardPool_1")
