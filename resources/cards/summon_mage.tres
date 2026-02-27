@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://bf46nrrj7281p" path="res://scripts/data/card_data.gd" id="1_card_data"]
 [ext_resource type="Script" uid="uid://cvjpq4vdvecm3" path="res://scripts/data/effects/spawn_unit_effect.gd" id="2_spawn_effect"]
 
-[sub_resource type="Resource" id="SpawnEffect_1"]
+[sub_resource type="Resource" id="Resource_3kyoa"]
 script = ExtResource("2_spawn_effect")
 unit_template_id = "player_mage"
 
@@ -13,4 +13,4 @@ script = ExtResource("1_card_data")
 id = "summon_mage"
 display_name = "召唤法师"
 description = "在目标空格部署一个法师单位（HP：5，ATK：14）"
-effects = Array[ExtResource("1_3kyoa")]([SubResource("SpawnEffect_1")])
+effects = Array[ExtResource("1_3kyoa")]([SubResource("Resource_3kyoa")])

@@ -72,12 +72,13 @@ func create_card_tab():
 	
 	# 表格
 	card_table = Tree.new()
-	card_table.columns = 5
+	card_table.columns = 6
 	card_table.set_column_title(0, "ID")
 	card_table.set_column_title(1, "名称")
 	card_table.set_column_title(2, "类型")
 	card_table.set_column_title(3, "费用")
-	card_table.set_column_title(4, "描述")
+	card_table.set_column_title(4, "单位ID")
+	card_table.set_column_title(5, "描述")
 	card_table.column_titles_visible = true
 	card_table.hide_root = true
 	card_table.custom_minimum_size = Vector2(0, 400)
@@ -251,15 +252,24 @@ func load_cards():
 			if file_name.ends_with(".tres"):
 				var res = load("res://resources/cards/" + file_name)
 				if res:
-					all_cards.append({
+					var card_dict = {
 						"resource": res,
 						"path": "res://resources/cards/" + file_name,
 						"id": res.id,
 						"display_name": res.display_name,
 						"card_type": res.card_type,
 						"cost": res.cost,
-						"description": res.description
-					})
+						"description": res.description,
+						"unit_id": ""  # 单位ID（UNIT类型卡牌）
+					}
+					
+					# 提取UNIT卡牌的单位ID
+					if res.card_type == 0 and res.effects and res.effects.size() > 0:
+						var effect = res.effects[0]
+						if effect and effect.get("unit_template_id") != null:
+							card_dict.unit_id = effect.unit_template_id
+					
+					all_cards.append(card_dict)
 			file_name = dir.get_next()
 		dir.list_dir_end()
 	refresh_card_table()
@@ -354,19 +364,50 @@ func refresh_card_table():
 		item.set_text(1, card.display_name)
 		item.set_text(2, get_card_type_name(card.card_type))
 		item.set_text(3, str(card.cost))
-		item.set_text(4, card.description.substr(0, 30))
+		item.set_text(4, card.unit_id if card.card_type == 0 else "-")
+		item.set_text(5, card.description.substr(0, 30))
 		
 		# 可编辑
 		item.set_editable(0, true)
 		item.set_editable(1, true)
 		item.set_editable(3, true)
-		item.set_editable(4, true)
+		item.set_editable(5, true)
 		
 		# 类型列设置为下拉选择
 		item.set_cell_mode(2, TreeItem.CELL_MODE_RANGE)
 		item.set_text(2, "UNIT,SPELL,BUFF")
 		item.set_range(2, card.card_type)
 		item.set_editable(2, true)
+		
+		# 单位ID列 - 仅UNIT类型可编辑，下拉选择
+		if card.card_type == 0:  # UNIT类型
+			item.set_cell_mode(4, TreeItem.CELL_MODE_RANGE)
+			# 构建单位列表（仅PLAYER阵营）
+			var unit_options = []
+			var unit_ids = []
+			var selected_index = 0
+			var index = 0
+			for unit in all_units:
+				# 只显示PLAYER阵营的单位
+				if unit.faction == 0:  # 0 = PLAYER
+					unit_options.append(unit.display_name + " (" + unit.id + ")")
+					unit_ids.append(unit.id)
+					if unit.id == card.unit_id:
+						selected_index = index
+					index += 1
+			
+			if unit_options.size() > 0:
+				item.set_text(4, ",".join(unit_options))
+				item.set_range(4, selected_index)
+				item.set_editable(4, true)
+				# 保存unit_ids映射到metadata
+				item.set_metadata(4, unit_ids)
+			else:
+				# 没有可用的PLAYER单位时显示提示
+				item.set_text(4, "无可用单位")
+				item.set_editable(4, false)
+		else:
+			item.set_editable(4, false)
 		
 		item.set_metadata(0, card)
 
@@ -483,13 +524,24 @@ func _on_card_edited():
 		2:
 			card.card_type = int(item.get_range(2))
 			update_status("已修改类型: " + get_card_type_name(card.card_type))
+			# 类型改变后刷新表格（更新单位ID列的可编辑状态）
+			refresh_card_table()
 		3: 
 			var val = item.get_text(3)
 			if val.is_valid_int():
 				card.cost = int(val)
 				update_status("已修改费用: " + str(card.cost))
-		4: 
-			card.description = item.get_text(4)
+		4:
+			# 单位ID列
+			if card.card_type == 0:  # UNIT类型
+				var unit_ids = item.get_metadata(4)
+				if unit_ids and unit_ids is Array:
+					var selected_index = int(item.get_range(4))
+					if selected_index >= 0 and selected_index < unit_ids.size():
+						card.unit_id = unit_ids[selected_index]
+						update_status("已修改单位ID: " + card.unit_id)
+		5: 
+			card.description = item.get_text(5)
 			update_status("已修改描述")
 
 func _on_unit_selected():
@@ -536,10 +588,12 @@ func _on_add_card():
 		"display_name": "新卡牌",
 		"card_type": 0,
 		"cost": 1,
+		"unit_id": "",
 		"description": ""
 	}
 	all_cards.append(new_card)
 	refresh_card_table()
+	update_status("已添加新卡牌，请设置单位ID后保存")
 
 func _on_delete_card():
 	if not selected_card_data.is_empty():
@@ -677,6 +731,17 @@ func _on_save_pressed():
 		res.card_type = card.card_type
 		res.cost = card.cost
 		res.description = card.description
+		
+		# 处理Effect（全量刷新）
+		if card.card_type == 0:  # UNIT类型
+			res.effects.clear()
+			if card.unit_id != "":
+				# 加载SpawnUnitEffect脚本
+				var effect_script = load("res://scripts/data/effects/spawn_unit_effect.gd")
+				if effect_script:
+					var effect = effect_script.new()
+					effect.unit_template_id = card.unit_id
+					res.effects.append(effect)
 		
 		var path = card.path if card.path != "" else "res://resources/cards/" + card.id + ".tres"
 		if ResourceSaver.save(res, path) == OK:

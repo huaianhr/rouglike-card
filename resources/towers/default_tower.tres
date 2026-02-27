@@ -1,12 +1,7 @@
-[gd_resource type="Resource" script_class="TowerConfig" load_steps=2 format=3 uid="uid://cy8x9z0a1b2cd"]
+[gd_resource type="Resource" script_class="TowerConfig" format=3 uid="uid://cy8ya00a1b2cd"]
 
-[ext_resource type="Script" path="res://scripts/data/tower_config.gd" id="1_tower_config"]
+[ext_resource type="Script" uid="uid://chsoxsawuexkx" path="res://scripts/data/tower_config.gd" id="1_tower_config"]
 
 [resource]
 script = ExtResource("1_tower_config")
 tower_id = "default_tower"
-display_name = "核心防御塔"
-max_hp = 80
-attack = 100
-attack_interval = 5
-attack_pattern = "single_lane"

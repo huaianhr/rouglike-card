@@ -1,13 +1,13 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=4 format=3 uid="uid://card_undead_armor"]
+[gd_resource type="Resource" script_class="CardData" format=3 uid="uid://dx5w5kakbghwg"]
 
-[ext_resource type="Script" path="res://scripts/data/card_data.gd" id="1_card_data"]
-[ext_resource type="Script" path="res://scripts/data/effects/buff_stat_effect.gd" id="2_buff_effect"]
+[ext_resource type="Script" uid="uid://bf46nrrj7281p" path="res://scripts/data/card_data.gd" id="1_card_data"]
+[ext_resource type="Script" uid="uid://cpa234weoh17e" path="res://scripts/data/card_effect.gd" id="1_kl3ks"]
+[ext_resource type="Script" uid="uid://ca23wia51ycb3" path="res://scripts/data/effects/buff_stat_effect.gd" id="2_buff_effect"]
 
 [sub_resource type="Resource" id="BuffEffect_1"]
 script = ExtResource("2_buff_effect")
 stat_type = "armor"
 value = 5
-duration = -1
 
 [resource]
 script = ExtResource("1_card_data")
@@ -15,8 +15,6 @@ id = "undead_armor"
 display_name = "亡灵永存"
 description = "目标友军+5护甲（单局）（当一个单位拥有护甲，面对攻击时优先扣除护甲值）"
 card_type = 2
-cost = 1
 is_consumable = false
 target_rule = 1
-effects = Array[Resource("res://scripts/data/card_effect.gd")]([SubResource("BuffEffect_1")])
-icon_path = ""
+effects = Array[ExtResource("1_kl3ks")]([SubResource("BuffEffect_1")])
