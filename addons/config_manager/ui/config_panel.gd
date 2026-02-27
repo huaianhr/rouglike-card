@@ -33,7 +33,7 @@ func _ready():
 	print("[配置管理器] _ready() 开始")
 	
 	# 获取UI节点
-	tab_container = $VBox/TabContainer
+	tab_container = $VBox/ScrollContainer/TabContainer
 	save_button = $VBox/TopBar/SaveButton
 	refresh_button = $VBox/TopBar/RefreshButton
 	status_label = $VBox/StatusBar/StatusLabel
