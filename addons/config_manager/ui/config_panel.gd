@@ -929,8 +929,31 @@ func _on_save_pressed():
 		if ResourceSaver.save(res, path) == OK:
 			saved += 1
 	
-	update_status("已保存 %d 项配置" % saved)
-	load_all_configs()
+	# 保存波次（如果当前有选中的关卡）
+	var wave_saved = false
+	var current_wave_level_index = -1
+	if not current_level_for_waves.is_empty():
+		current_wave_level_index = get_current_wave_level_index()
+		if save_waves_internal():
+			saved += 1
+			wave_saved = true
+	
+	update_status("已保存 %d 项配置%s" % [saved, " (含波次)" if wave_saved else ""])
+	
+	# 重新加载
+	load_cards()
+	load_units()
+	load_towers()
+	load_levels()
+	load_global_config()
+	
+	# 恢复波次页签的选中状态
+	populate_wave_level_options()
+	if current_wave_level_index >= 0:
+		var level_option = tab_container.get_node_or_null("WaveTab/TopBar/LevelOption")
+		if level_option and current_wave_level_index < level_option.item_count:
+			level_option.selected = current_wave_level_index
+			load_waves_for_level(current_wave_level_index)
 
 func _on_refresh_pressed():
 	load_all_configs()
@@ -1111,24 +1134,28 @@ func _on_delete_wave():
 	update_status("已删除波次")
 
 func _on_save_waves():
+	if save_waves_internal():
+		update_status("已保存关卡波次配置：%s，共%d个波次" % [current_level_for_waves.level_id, current_level_for_waves.waves.size()])
+		load_waves_for_level(get_current_wave_level_index())
+	else:
+		update_status("保存波次失败！")
+
+func save_waves_internal() -> bool:
 	if current_level_for_waves.is_empty():
-		update_status("请先选择关卡")
-		return
+		return false
 	
 	var level_res: LevelConfig
 	if current_level_for_waves.resource:
 		level_res = current_level_for_waves.resource
 	else:
-		update_status("错误：无法获取关卡资源")
-		return
+		return false
 	
 	# 全量刷新波次
 	level_res.enemy_waves.clear()
 	
 	var wave_script = load("res://scripts/data/wave_data.gd")
 	if not wave_script:
-		update_status("错误：无法加载WaveData脚本")
-		return
+		return false
 	
 	for wave_config in current_level_for_waves.waves:
 		var wave = wave_script.new()
@@ -1140,10 +1167,11 @@ func _on_save_waves():
 	
 	# 保存关卡
 	if ResourceSaver.save(level_res, current_level_for_waves.path) == OK:
-		update_status("已保存关卡波次配置：%s，共%d个波次" % [current_level_for_waves.level_id, current_level_for_waves.waves.size()])
-		load_waves_for_level(get_current_wave_level_index())
+		print("[配置管理器] 已保存波次: ", current_level_for_waves.path)
+		return true
 	else:
-		update_status("保存失败！")
+		push_error("[配置管理器] 保存波次失败: " + current_level_for_waves.path)
+		return false
 
 func _on_refresh_waves():
 	var index = get_current_wave_level_index()

@@ -4,35 +4,29 @@
 [ext_resource type="Resource" path="res://resources/configs/default_rules.tres" id="2_battle_rules"]
 [ext_resource type="Script" uid="uid://r6v85b1v02lx" path="res://scripts/data/wave_data.gd" id="3_wave_data"]
 [ext_resource type="Script" uid="uid://bolrvtu62e2sp" path="res://scripts/data/reward_pool_data.gd" id="4_reward_pool"]
-[ext_resource type="Resource" path="res://resources/towers/default_tower.tres" id="5_tower_config"]
+[ext_resource type="Resource" uid="uid://cy8ya00a1b2cd" path="res://resources/towers/default_tower.tres" id="5_tower_config"]
 
-[sub_resource type="Resource" id="Wave_1"]
+[sub_resource type="Resource" id="Resource_2ry8w"]
 script = ExtResource("3_wave_data")
 enemy_unit_ids = Array[String](["enemy_servant"])
 
-[sub_resource type="Resource" id="Resource_fpmjh"]
+[sub_resource type="Resource" id="Resource_pt2wu"]
 script = ExtResource("3_wave_data")
 spawn_turn = 2
 lane = 1
 enemy_unit_ids = Array[String](["enemy_servant"])
-metadata/_custom_type_script = "uid://r6v85b1v02lx"
 
-[sub_resource type="Resource" id="Wave_2"]
+[sub_resource type="Resource" id="Resource_sfw1q"]
 script = ExtResource("3_wave_data")
 spawn_turn = 3
 lane = 1
 enemy_unit_ids = Array[String](["enemy_knight"])
 
-[sub_resource type="Resource" id="Wave_3"]
+[sub_resource type="Resource" id="Resource_ifjtj"]
 script = ExtResource("3_wave_data")
 spawn_turn = 4
+lane = 2
 enemy_unit_ids = Array[String](["enemy_servant", "enemy_knight"])
-
-[sub_resource type="Resource" id="Wave_4"]
-script = ExtResource("3_wave_data")
-spawn_turn = 4
-lane = 1
-enemy_unit_ids = Array[String](["enemy_servant", "enemy_mage"])
 
 [sub_resource type="Resource" id="RewardPool_1"]
 script = ExtResource("4_reward_pool")
@@ -43,8 +37,7 @@ script = ExtResource("1_level_config")
 level_id = "level_01"
 display_name = "第一关：恶灵初袭"
 description = "恶灵开始侵蚀这片土地，守住防线！"
-chapter_id = 1
 battle_rules = ExtResource("2_battle_rules")
 tower_config = ExtResource("5_tower_config")
-enemy_waves = Array[ExtResource("3_wave_data")]([SubResource("Wave_1"), SubResource("Resource_fpmjh"), SubResource("Wave_2"), SubResource("Wave_3"), SubResource("Wave_4")])
+enemy_waves = Array[ExtResource("3_wave_data")]([SubResource("Resource_2ry8w"), SubResource("Resource_pt2wu"), SubResource("Resource_sfw1q"), SubResource("Resource_ifjtj")])
 reward_pool = SubResource("RewardPool_1")
